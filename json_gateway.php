@@ -30,14 +30,22 @@ switch ($action)
 	case 'addEvent';
 		$isTopicAble = false;
 		$max_users = 0;
+		$start = 0;
+		$end = 0;
 		if (isset($_GET['title']) && isset($_GET['message'])){
-			if ($_GET('isTopicAble') != null && ($_GET('isTopicAble') == false || $_GET('isTopicAble') == true))
-				$isTopicAble = $_GET('isTopicAble');
+			if ($_GET['isTopicAble'] != null && ($_GET['isTopicAble'] == false || $_GET['isTopicAble'] == true))
+				$isTopicAble = $_GET['isTopicAble'];
 
-			if ($_GET('max_users') !=null && (is_numeric($_GET('max_users'))))
-				$max_users = $_GET('max_users');
+			if ($_GET['maxusers'] != null && (is_numeric($_GET['maxusers'])))
+				$max_users = $_GET['maxusers'];
 
-			addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users);			
+			if ($_GET['start'] != null && (is_numeric($_GET['start'])))
+				$start = $_GET['start'];
+
+			if ($_GET['end'] != null && (is_numeric($_GET['end'])))
+				$end = $_GET['end'];
+
+			addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users, $start, $end);			
 		}
 		break;
 		
@@ -96,12 +104,12 @@ function getEvents()
 }
 
 
-function addEvent($title, $message, $isTopicAble, $max_users){
+function addEvent($title, $message, $isTopicAble, $max_users, $start, $end){
 	
 	global $returnValue, $db, $pun_user;
 	$now = time();
 	
-	$query = 'INSERT INTO '.$db->prefix.'events (title, event_desc, max_users, start, end, topic_id) VALUES (\''.$db->escape($title).'\', \''.$db->escape($message).'\', \''.$db->escape($max_users).'\', '.$now.', '.$now.', NULL)';
+	$query = 'INSERT INTO '.$db->prefix.'events (title, event_desc, max_users, start, end, topic_id) VALUES (\''.$db->escape($title).'\', \''.$db->escape($message).'\', \''.$db->escape($max_users).'\', '.$start.', '.$end.', NULL)';
 	$db->query($query) or error('Unable to create event', __FILE__, __LINE__, $db->error()); 
 	$new_eid = $db->insert_id();
 	print_r($query);
