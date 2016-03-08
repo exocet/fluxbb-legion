@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Client :  127.0.0.1
--- Généré le :  Ven 04 Mars 2016 à 14:34
+-- Généré le :  Mar 08 Mars 2016 à 09:11
 -- Version du serveur :  5.7.9
 -- Version de PHP :  5.6.15
 
@@ -30,18 +30,13 @@ DROP TABLE IF EXISTS `events`;
 CREATE TABLE IF NOT EXISTS `events` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(100) NOT NULL,
-  `start` date NOT NULL,
-  `end` date NOT NULL,
+  `event_desc` varchar(300) NOT NULL,
+  `start` int(10) NOT NULL,
+  `end` int(10) NOT NULL,
+  `max_users` int(10) NOT NULL,
+  `topic_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
-
---
--- Contenu de la table `events`
---
-
-INSERT INTO `events` (`id`, `title`, `start`, `end`) VALUES
-(1, 'Title', '2016-03-04', '2016-03-04'),
-(2, 'Title', '2016-03-04', '2016-03-04');
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
