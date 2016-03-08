@@ -1,15 +1,15 @@
-<?php
+﻿<?php
 
 define('PUN_ROOT', dirname(__FILE__).'/');
 require PUN_ROOT.'include/common.php';
 header('Content-type: application/json');
 
 $action = isset($_GET['action']) ? $_GET['action'] : null;
-$returnValue = '';
+$returnValue;
 
-if ($pun_user['is_guest'])
+if ($pun_user['is_guest']){
 	exit;
-
+}
 if($action == null)
 	exit;
 
@@ -26,18 +26,32 @@ switch ($action)
 	case 'events':
 		getEvents();
 		break;
+		
+	case 'addEvent';
+		$isTopicAble = false;
+		$max_users = 0;
+		if (isset($_GET['title']) && isset($_GET['message'])){
+			if ($_GET('isTopicAble') != null && ($_GET('isTopicAble') == false || $_GET('isTopicAble') == true))
+				$isTopicAble = $_GET('isTopicAble');
 
-	case 'addEvent':
-		if (isset($_GET['title']) && isset($_GET['desc']) && isset($_GET['start']) && isset($_GET['end']))
-			addEvent($_GET['title'], $_GET['desc'], $_GET['start'], $_GET['end']);
-		else
-			$returnValue = "{return:0, msg:'Pas assez de paramêtres'}";
+			if ($_GET('max_users') !=null && (is_numeric($_GET('max_users'))))
+				$max_users = $_GET('max_users');
+
+			addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users);			
+		}
 		break;
-
+		
 	default:
 		exit();
 }
 
+//Final instruction
+if ($returnValue)
+	echo buildReturnValue($returnValue);
+
+
+
+//Functions
 function getUsers()
 {	
 	global $returnValue, $db;
@@ -71,9 +85,8 @@ function getEvents()
 {	
 	global $returnValue, $db;
 	$array_events = [];
-	$result = $db->query('SELECT events.id as id, title, event_desc, max_users, start, end, topic_id, count(user_id) as registered_users FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on events.id = event_id') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
-
-	//$result = $db->query('SELECT id, title, start, end, event_desc, topic_id, max_users, 0 as registered_users FROM '.$db->prefix.'events') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
+	
+	$result = $db->query('SELECT id, title, event_desc, max_users, topic_id, start, end FROM '.$db->prefix.'events') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
 	while($cur_event = $db->fetch_assoc($result))
 	{
 		array_push($array_events, $cur_event);
@@ -83,18 +96,76 @@ function getEvents()
 }
 
 
-function addEvent($title, $desc, $start, $end){
-	global $returnValue, $db;
-
-	// Insert the new event
-	$db->query('INSERT INTO '.$db->prefix.'events (title, event_desc, start, end) VALUES(\''.$db->escape($title).'\', \''.$db->escape($desc).'\', '.$start.', '.$end.')') or error('Unable to create event', __FILE__, __LINE__, $db->error());
+function addEvent($title, $message, $isTopicAble, $max_users){
+	
+	global $returnValue, $db, $pun_user;
+	$now = time();
+	
+	$query = 'INSERT INTO '.$db->prefix.'events (title, event_desc, max_users, start, end, topic_id) VALUES (\''.$db->escape($title).'\', \''.$db->escape($message).'\', \''.$db->escape($max_users).'\', '.$now.', '.$now.', NULL)';
+	$db->query($query) or error('Unable to create event', __FILE__, __LINE__, $db->error()); 
 	$new_eid = $db->insert_id();
+	print_r($query);
+	
+	if ($isTopicAble == true){
+		$new_tid = addEventTopic($title, $message);
+		$query = 'UPDATE '.$db->prefix.'events set topic_id='.$new_tid.' where id='.$new_eid;
+		print_r($query);
+		$db->query($query) or error('Unable to update event', __FILE__, __LINE__, $db->error()); 
+	}
+	
+	$returnValue = buildMessage(0, "l'événement à été crée");
+}
 
+function addEventTopic($subject, $message){
 
-	$returnValue = "{error: 0, msg: 'New event".$new_eid." created'}";
+	require PUN_ROOT.'include/search_idx.php';
+
+	global $returnValue, $db, $pun_user;
+	
+	$username = $pun_user['username'];
+	$email = $pun_user['email'];
+	$hide_smilies = 0;
+	$fid = 2;
+	$now = time();
+	
+	// Create the topic
+	$query = 'INSERT INTO '.$db->prefix.'topics (poster, subject, posted, last_post, last_poster, sticky, forum_id) VALUES(\''.$db->escape($username).'\', \''.$db->escape($subject).'\', '.$now.', '.$now.', \''.$db->escape($username).'\', 0, '.$fid.')';
+	//print_r($query);
+	$db->query($query) or error('Unable to create topic', __FILE__, __LINE__, $db->error());
+	$new_tid = $db->insert_id();
+
+	// To subscribe or not to subscribe, that ...
+	if ($pun_config['o_topic_subscriptions'] == '1' && $subscribe)
+		$db->query('INSERT INTO '.$db->prefix.'topic_subscriptions (user_id, topic_id) VALUES('.$pun_user['id'].' ,'.$new_tid.')') or error('Unable to add subscription', __FILE__, __LINE__, $db->error());
+
+	// Create the post ("topic post")
+	$db->query('INSERT INTO '.$db->prefix.'posts (poster, poster_id, poster_ip, message, hide_smilies, posted, topic_id) VALUES(\''.$db->escape($username).'\', '.$pun_user['id'].', \''.$db->escape(get_remote_address()).'\', \''.$db->escape($message).'\', '.$hide_smilies.', '.$now.', '.$new_tid.')') or error('Unable to create post', __FILE__, __LINE__, $db->error());
+
+	$new_pid = $db->insert_id();
+
+	// Update the topic with last_post_id
+	$db->query('UPDATE '.$db->prefix.'topics SET last_post_id='.$new_pid.', first_post_id='.$new_pid.' WHERE id='.$new_tid) or error('Unable to update topic', __FILE__, __LINE__, $db->error());
+	
+	update_search_index('post', $new_pid, $message, $subject);
+
+	update_forum($fid);	
+	
+	return $new_tid;
 }
 
 
-if($returnValue)
-	echo json_encode($returnValue);
+//Local utils functions
+function buildMessage($error, $message){
+	$message = json_encode(array('error' => $error, 'message' => $message), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	
+	return $message;
+}
+
+function buildReturnValue($returnValue){
+	if (!is_string($returnValue))
+		return json_encode($returnValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	
+	return $returnValue;
+}
+
 ?>
