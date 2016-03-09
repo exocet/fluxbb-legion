@@ -25,18 +25,18 @@ if ($pun_user['g_read_board'] == '0')
 					<div class="infldset txtarea">
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b>Titre</b></span><br />
-								<input type="text" name="title" id="title" value="" size="100" maxlength="80" tabindex="" /><br />
+								<input type="text" name="title" id="title" data-bind="value: title" value="" size="100" maxlength="80" tabindex="" /><br />
 							</label>
 							<label class="conl required"><span><b>Titre formatté</b></span><br />
-								<input type="text" name="formatted_title" disabled="disabled" id="formatted_title" style="border: none;background: inherit;" value="" size="100" maxlength="80" tabindex="" /><br />
+								<input type="text" name="formatted_title" disabled="disabled" id="formatted_title" data-bind="value: formatted_title()" style="border: none;background: inherit;" value="" size="100" maxlength="80" tabindex="" /><br />
 							</label><br />
 						</div>
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b>Date de démarrage</b></span><br />
-								<input type="text" id="start" name="start" value="" size="25" maxlength="25" tabindex="" /><br />
+								<input type="text" id="start" name="start" data-bind="value: start" value="" size="25" maxlength="25" tabindex="" /><br />
 							</label>
 							<label class="conl required"><span><b>Date de fin</b></span><br />
-								<input type="text" id="end" name="end" value="" size="25" maxlength="25" tabindex="" /><br />
+								<input type="text" id="end" name="end" data-bind="value: end" value="" size="25" maxlength="25" tabindex="" /><br />
 							</label>
 						</div>
 						<div style="display:inline-block;width:100%;">
@@ -49,11 +49,14 @@ if ($pun_user['g_read_board'] == '0')
 								</select>
 							</label>
 							<label class="conl required"><span><b>Créer un sujet associé</b></span><br />
-								<input type="checkbox" id="istopicable" name="istopicable" value="" tabindex="" /><br />
+								<input type="checkbox" id="istopicable" data-bind="value: istopicable" name="istopicable" value="" tabindex="" /><br />
 							</label>
+							<label class="conl required"><span><b>Evénement visible pour les invités ?</b></span><br />
+								<input type="checkbox" id="ispublic" data-bind="value: ispublic" name="ispublic" value="" tabindex="" /><br />
+							</label>							
 						</div>
 						<label class="conl required"><span><b>Description</b></span><br />
-							<textarea name="desc" id="desc" rows="20" cols="95" tabindex=""></textarea><br />
+							<textarea name="desc" id="desc" data-bind="value: desc" rows="20" cols="95" tabindex=""></textarea><br />
 						</label>
 					</div>
 				</fieldset>	
@@ -62,65 +65,79 @@ if ($pun_user['g_read_board'] == '0')
 	</div>
 </div>
 
-
 <script src="portal/js/jquery-2.2.1.min.js"></script>
 <script src="portal/js/moment.js"></script>
 <script src="portal/js/fr.js"></script>
 <script src="portal/js/jquery-ui.min.js"></script>
 <script src="portal/js/datepicker-fr.js"></script>
+<script src="portal/js/knockout-3.4.0.js"></script>
+
 <script>
-	var startDate, endDate;
+	function AppViewModel() {
+		var self = this;
+
+	    self.title = ko.observable();
+	    self.formatted_title = ko.observable();
+	    self.istopicable = ko.observable();
+	    self.ispublic = ko.observable();
+	    self.desc = ko.observable();
+	    self.formatted_title = ko.computed(function() {
+	    	var title = self.title();
+			if(title != '' && title != undefined){
+				var eventStartDate = moment(self.start()).format("dddd D MMMM");
+				return title + ' du ' + eventStartDate;
+			}
+			return "";
+	    }, self);
+	    self.start = ko.computed({
+	    	read: function(){
+	    		if(self.startDate != undefined){
+	    			return moment(self.startDate).format(dtDateFormat);	    			
+	    		}else{
+	    			return "";
+	    		}
+	    	},
+	    	write: function(value){
+	    		if(self.startdate != undefined && moment(self.startDate).isAfter(self.endDate) == true){
+	    			self.startDate(self.endDate);
+	    		}else{
+	    			self.startDate(moment(value, dtDateFormat));
+	    		}
+	    	},
+			owner: self
+	    });
+	    self.end = ko.computed({
+	    	read: function(){
+	    		if(self.endDate != undefined){
+	    			return moment(self.endDate).format(dtDateFormat);	    			
+	    		}else{
+	    			return "";
+	    		}
+	    	},
+	    	write: function(value){
+	    		if(self.enddate != undefined && moment(self.endDate).isBefore(self.startDate) == true){
+	    			self.endDate(self.startDate);
+	    		}else{
+	    			self.endDate(moment(value, dtDateFormat));
+	    		}
+	    	},
+			owner: self
+	    });
+	    self.startDate = ko.observable();
+	    self.endDate = ko.observable();
+
+		self.title.subscribe(function(newValue) {
+		    console.log(newValue);
+		});	    
+	}
 
 	moment.locale('fr');
 	$.datepicker.setDefaults( $.datepicker.regional[ "fr" ] );
 	$("#start").datepicker();	
 	$("#end").datepicker();
-	$("#start").change(function(){
-		startDate = $(this).datepicker("getDate");
-		if(endDate == undefined || moment(endDate).isAfter(startDate) == false){
-			endDate = $(this).datepicker("getDate");
-			$("#end").val($(this).val());
-			endDate = startDate;
-		}
-		updateTitleFormatted();
-	});
-	$('#end').change(function(){
-		if(startDate != undefined && moment(startDate).isAfter(endDate) == true){
-			endDate = startDate;
-			$("#end").val($("#start").val());
-		}else{
-			endDate = $(this).datepicker("getDate");			
-		}
-	})
-	$("#title").keyup(function(){
-		updateTitleFormatted();
-	});
-	$("#addEvent").click(function(){
-		launchEventCreation();
-	});
-	var updateTitleFormatted = function(){
-		if($("#title").val() != ''){
-			var eventStartDate = moment(startDate).format("dddd D MMMM");
-			$('#formatted_title').val($("#title").val() + ' du ' + eventStartDate);
-		}else{
-			$('#formatted_title').val('');			
-		}		
-	};
-	var launchEventCreation = function(){
-		var eventOptions = {
-			action: 'addEvent',
-			title: $('#formatted_title').val(),
-			message: $('#desc').val(),
-			isTopicAble: $('#istopicable').is(':checked'),
-			maxusers: $('#maxusers').val(),
-			start: moment(startDate).unix(),
-			end: moment(endDate).unix()
-		};
-		console.log(eventOptions);
-		$.get( "json_gateway.php", eventOptions ).done(function( data ) {
-			alert( "Data Loaded: " + JSON.stringify(data) );
-		});
-	}
+	var dtDateFormat = $("#start").datepicker("option", "dateFormat");
+
+	ko.applyBindings(new AppViewModel());
 </script
 <?php
 

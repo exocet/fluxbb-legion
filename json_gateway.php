@@ -45,7 +45,10 @@ switch ($action)
 			if ($_GET['end'] != null && (is_numeric($_GET['end'])))
 				$end = $_GET['end'];
 
-			addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users, $start, $end);			
+			if ($_GET['ispublic'] != null && (is_numeric($_GET['ispublic'])))
+				$ispublic = $_GET['ispublic'];
+
+			addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users, $start, $end, $ispublic);			
 		}
 		break;
 		
@@ -94,7 +97,7 @@ function getEvents()
 	global $returnValue, $db;
 	$array_events = [];
 	
-	$result = $db->query('SELECT '.$db->prefix.'events.id, title, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT '.$db->prefix.'events.id, title, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
 	while($cur_event = $db->fetch_assoc($result))
 	{
 		array_push($array_events, $cur_event);
@@ -104,12 +107,12 @@ function getEvents()
 }
 
 
-function addEvent($title, $message, $isTopicAble, $max_users, $start, $end){
+function addEvent($title, $message, $isTopicAble, $max_users, $start, $end, $is_public){
 	
 	global $returnValue, $db, $pun_user;
 	$now = time();
 	
-	$query = 'INSERT INTO '.$db->prefix.'events (title, event_desc, max_users, start, end, topic_id) VALUES (\''.$db->escape($title).'\', \''.$db->escape($message).'\', \''.$db->escape($max_users).'\', '.$start.', '.$end.', NULL)';
+	$query = 'INSERT INTO '.$db->prefix.'events (title, event_desc, max_users, start, end, topic_id, is_public) VALUES (\''.$db->escape($title).'\', \''.$db->escape($message).'\', \''.$db->escape($max_users).'\', '.$db->escape($start).', '.$db->escape($end).', NULL, '.$db->escape($is_public).')';
 	$db->query($query) or error('Unable to create event', __FILE__, __LINE__, $db->error()); 
 	$new_eid = $db->insert_id();
 	print_r($isTopicAble);
