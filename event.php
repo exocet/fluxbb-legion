@@ -12,13 +12,6 @@ if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
 
 ?>
-
-<ul data-bind="foreach: validation_errors">
-    <li>
-        <b data-bind="text: $data"></b>
-    </li>
-</ul>
-
 <div id="postform" class="blockform">
 	<h2><span><?php echo $action ?></span></h2>
 	<div class="box">
@@ -29,7 +22,7 @@ if ($pun_user['g_read_board'] == '0')
 					<div class="infldset txtarea">
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b>Titre</b></span><br />
-								<input type="text" name="title" id="title" data-bind="value: title" value="" size="60" maxlength="60" tabindex="" /><br />
+								<input type="text" name="title" id="title" data-bind="value: title, hasError: 'title'" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label>
 						</div>
 						<div style="display:inline-block;width:100%;">
@@ -68,38 +61,45 @@ if ($pun_user['g_read_board'] == '0')
 			</div>
 	</div>
 </div>
-
+<style>
+	.validationMessage {
+		color: red;
+		margin-left: 20px;
+	}
+</style>
 <script src="portal/js/jquery-2.2.1.min.js"></script>
 <script src="portal/js/moment.js"></script>
 <script src="portal/js/fr.js"></script>
 <script src="portal/js/jquery-ui.min.js"></script>
 <script src="portal/js/datepicker-fr.js"></script>
 <script src="portal/js/knockout-3.4.0.js"></script>
+<script src="portal/js/knockout.validation.min.js"></script>
+<script type="text/javascript" src="portal/js/kovalidation/fr-FR.js"></script>
 
 <script>
 	function AppViewModel() {
 		var self = this;
 
-	    self.title = ko.observable();
+	    self.title = ko.observable().extend({ required: true });
 	    self.useStartDate = ko.observable(true);
 	    self.formatted_title = ko.observable();
 	    self.istopicable = ko.observable(true);
 	    self.ispublic = ko.observable(false);
-	    self.desc = ko.observable("");
+	    self.desc = ko.observable("").extend({ required: true });
 	    self.maxusers_list = ko.observableArray([0,1,2,3,4,5,6,7,8,9,10]);
 	    self.maxusers = 0;
 	    self.formatted_title = ko.computed(function() {
 	    	var title = self.title();
 			if(title != '' && title != undefined){
 				var eventStartDate = "";
-				if(self.start() != undefined && self.useStartDate() == true)
+				if(self.start() != "" && self.useStartDate() == true)
 					eventStartDate = ' du ' + moment(self.start(), dtDateFormat).format("dddd D MMMM");
 
 				return title + eventStartDate;
 			}
 			return "";
 	    }, self);
-	    self.startDate = ko.observable("");
+	    self.startDate = ko.observable("").extend({ required: true });;
 	    self.endDate = ko.observable("");
 
 	    self.start = ko.observable("");
@@ -120,23 +120,9 @@ if ($pun_user['g_read_board'] == '0')
 				self.end(self.start());
 			}
 		});
-		self.validation_errors = ko.observableArray([]);
-		self.validation = function(){
-			self.validation_errors.splice(0);
 
-			if(self.formatted_title() == "")
-				self.validation_errors.push("Le champ titre est vide");
-
-			if(self.startDate() == "")
-				self.validation_errors.push("Le champ début est vide");
-
-			if(self.desc() == "")
-				self.validation_errors.push('Le champ Description est vide');
-
-		};
+		self.errors = ko.validation.group(self);		
 		self.save = function(){
-			self.validation();
-
 			var postJsonData = {
 				title: self.formatted_title(),
 				start: self.startDate(),
@@ -147,8 +133,11 @@ if ($pun_user['g_read_board'] == '0')
 				maxusers: self.maxusers
 			};
 			console.log(JSON.stringify(postJsonData));
-		}	    
+			var result = ko.validation.group(self, { deep: true });
+			if (!self.isValid()) { self.errors.showAllMessages();} 			
+		};
 	}
+	//var errors = ko.validation.group([AppViewModel.title, AppViewModel.desc]);
 
 	moment.locale('fr');
 	$.datepicker.setDefaults( $.datepicker.regional[ "fr" ] );
@@ -156,7 +145,11 @@ if ($pun_user['g_read_board'] == '0')
 	$("#end").datepicker();
 	var dtDateFormat = "DD/mm/YYYY";
 
-	ko.applyBindings(new AppViewModel());
+	ko.validation.init();
+	ko.validation.locale('fr-FR');
+	//ko.applyBindings(new AppViewModel());
+	ko.applyBindingsWithValidation(new AppViewModel());
+
 </script
 <?php
 
