@@ -94,7 +94,7 @@ function getEvents()
 	global $returnValue, $db;
 	$array_events = [];
 	
-	$result = $db->query('SELECT id, title, event_desc, max_users, topic_id, start, end FROM '.$db->prefix.'events') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT '.$db->prefix.'events.id, title, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
 	while($cur_event = $db->fetch_assoc($result))
 	{
 		array_push($array_events, $cur_event);
@@ -112,9 +112,8 @@ function addEvent($title, $message, $isTopicAble, $max_users, $start, $end){
 	$query = 'INSERT INTO '.$db->prefix.'events (title, event_desc, max_users, start, end, topic_id) VALUES (\''.$db->escape($title).'\', \''.$db->escape($message).'\', \''.$db->escape($max_users).'\', '.$start.', '.$end.', NULL)';
 	$db->query($query) or error('Unable to create event', __FILE__, __LINE__, $db->error()); 
 	$new_eid = $db->insert_id();
-	print_r($query);
-	
-	if ($isTopicAble == true){
+	print_r($isTopicAble);
+	if ($isTopicAble == 'true'){
 		$new_tid = addEventTopic($title, $message);
 		$query = 'UPDATE '.$db->prefix.'events set topic_id='.$new_tid.' where id='.$new_eid;
 		print_r($query);
