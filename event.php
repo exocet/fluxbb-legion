@@ -13,7 +13,11 @@ if ($pun_user['g_read_board'] == '0')
 
 ?>
 
-
+<ul data-bind="foreach: validation_errors">
+    <li>
+        <b data-bind="text: $data"></b>
+    </li>
+</ul>
 
 <div id="postform" class="blockform">
 	<h2><span><?php echo $action ?></span></h2>
@@ -25,10 +29,15 @@ if ($pun_user['g_read_board'] == '0')
 					<div class="infldset txtarea">
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b>Titre</b></span><br />
-								<input type="text" name="title" id="title" data-bind="value: title" value="" size="100" maxlength="80" tabindex="" /><br />
+								<input type="text" name="title" id="title" data-bind="value: title" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label>
-							<label class="conl required"><span><b>Titre formatté</b></span><br />
-								<input type="text" name="formatted_title" disabled="disabled" id="formatted_title" data-bind="value: formatted_title()" style="border: none;background: inherit;" value="" size="100" maxlength="80" tabindex="" /><br />
+						</div>
+						<div style="display:inline-block;width:100%;">
+							<label class="conl required" style="width: 25%;"><span><b>Inclure la date dans le titre</b></span><br />
+								<input type="checkbox" id="useStartDate" data-bind="checked: useStartDate" name="useStartDate" value="" tabindex="" /><br />
+							</label>
+							<label class="conl required" style="width: 60%;"><span><b>Titre formaté</b></span><br />
+								<input type="text" name="formatted_title" disabled="disabled" id="formatted_title" data-bind="value: formatted_title()" style="border: none;background: inherit;" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label><br />
 						</div>
 						<div style="display:inline-block;width:100%;">
@@ -41,18 +50,13 @@ if ($pun_user['g_read_board'] == '0')
 						</div>
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b>Nombre de places</b></span><br />
-								<select id="maxusers" name="maxusers" /> 
-									<option>0</option>       
-									<option>1</option>       
-									<option>2</option>       
-									<option>3</option>             
-								</select>
+								<select id="maxusers" name="maxusers" data-bind="options: maxusers_list, value: maxusers"></select> 
 							</label>
 							<label class="conl required"><span><b>Créer un sujet associé</b></span><br />
-								<input type="checkbox" id="istopicable" data-bind="value: istopicable" name="istopicable" value="" tabindex="" /><br />
+								<input type="checkbox" id="istopicable" data-bind="checked: istopicable" name="istopicable" value="" tabindex="" /><br />
 							</label>
 							<label class="conl required"><span><b>Evénement visible pour les invités ?</b></span><br />
-								<input type="checkbox" id="ispublic" data-bind="value: ispublic" name="ispublic" value="" tabindex="" /><br />
+								<input type="checkbox" id="ispublic" data-bind="checked: ispublic" name="ispublic" value="" tabindex="" /><br />
 							</label>							
 						</div>
 						<label class="conl required"><span><b>Description</b></span><br />
@@ -60,7 +64,7 @@ if ($pun_user['g_read_board'] == '0')
 						</label>
 					</div>
 				</fieldset>	
-				<input type="button" id="addEvent" value="Add Event"/>
+				<input type="button" data-bind='click: save' id="addEvent" value="Add Event"/>
 			</div>
 	</div>
 </div>
@@ -77,65 +81,80 @@ if ($pun_user['g_read_board'] == '0')
 		var self = this;
 
 	    self.title = ko.observable();
+	    self.useStartDate = ko.observable(true);
 	    self.formatted_title = ko.observable();
-	    self.istopicable = ko.observable();
-	    self.ispublic = ko.observable();
-	    self.desc = ko.observable();
+	    self.istopicable = ko.observable(true);
+	    self.ispublic = ko.observable(false);
+	    self.desc = ko.observable("");
+	    self.maxusers_list = ko.observableArray([0,1,2,3,4,5,6,7,8,9,10]);
+	    self.maxusers = 0;
 	    self.formatted_title = ko.computed(function() {
 	    	var title = self.title();
 			if(title != '' && title != undefined){
-				var eventStartDate = moment(self.start()).format("dddd D MMMM");
-				return title + ' du ' + eventStartDate;
+				var eventStartDate = "";
+				if(self.start() != undefined && self.useStartDate() == true)
+					eventStartDate = ' du ' + moment(self.start(), dtDateFormat).format("dddd D MMMM");
+
+				return title + eventStartDate;
 			}
 			return "";
 	    }, self);
-	    self.start = ko.computed({
-	    	read: function(){
-	    		if(self.startDate != undefined){
-	    			return moment(self.startDate).format(dtDateFormat);	    			
-	    		}else{
-	    			return "";
-	    		}
-	    	},
-	    	write: function(value){
-	    		if(self.startdate != undefined && moment(self.startDate).isAfter(self.endDate) == true){
-	    			self.startDate(self.endDate);
-	    		}else{
-	    			self.startDate(moment(value, dtDateFormat));
-	    		}
-	    	},
-			owner: self
-	    });
-	    self.end = ko.computed({
-	    	read: function(){
-	    		if(self.endDate != undefined){
-	    			return moment(self.endDate).format(dtDateFormat);	    			
-	    		}else{
-	    			return "";
-	    		}
-	    	},
-	    	write: function(value){
-	    		if(self.enddate != undefined && moment(self.endDate).isBefore(self.startDate) == true){
-	    			self.endDate(self.startDate);
-	    		}else{
-	    			self.endDate(moment(value, dtDateFormat));
-	    		}
-	    	},
-			owner: self
-	    });
-	    self.startDate = ko.observable();
-	    self.endDate = ko.observable();
+	    self.startDate = ko.observable("");
+	    self.endDate = ko.observable("");
 
-		self.title.subscribe(function(newValue) {
-		    console.log(newValue);
+	    self.start = ko.observable("");
+		self.start.subscribe(function(newValue) {
+			self.startDate(new moment(newValue, dtDateFormat).unix());
+			var curStartDate = self.startDate();
+			var curEndDate = self.endDate();
+			if(curStartDate != undefined && curStartDate > curEndDate){
+				self.end(self.start());
+			}
 		});	    
+	    self.end = ko.observable("");
+		self.end.subscribe(function(newValue) {
+			self.endDate(new moment(newValue, dtDateFormat).unix());			
+			var curStartDate = self.startDate();
+			var curEndDate = self.endDate();
+			if(curEndDate != undefined && curStartDate > curEndDate){
+				self.end(self.start());
+			}
+		});
+		self.validation_errors = ko.observableArray([]);
+		self.validation = function(){
+			self.validation_errors.splice(0);
+
+			if(self.formatted_title() == "")
+				self.validation_errors.push("Le champ titre est vide");
+
+			if(self.startDate() == "")
+				self.validation_errors.push("Le champ début est vide");
+
+			if(self.desc() == "")
+				self.validation_errors.push('Le champ Description est vide');
+
+		};
+		self.save = function(){
+			self.validation();
+
+			var postJsonData = {
+				title: self.formatted_title(),
+				start: self.startDate(),
+				end: self.endDate(),
+				desc: self.desc(),
+				ispublic: self.ispublic(),
+				istopicable: self.istopicable(),
+				maxusers: self.maxusers
+			};
+			console.log(JSON.stringify(postJsonData));
+		}	    
 	}
 
 	moment.locale('fr');
 	$.datepicker.setDefaults( $.datepicker.regional[ "fr" ] );
 	$("#start").datepicker();	
 	$("#end").datepicker();
-	var dtDateFormat = $("#start").datepicker("option", "dateFormat");
+	var dtDateFormat = "DD/mm/YYYY";
 
 	ko.applyBindings(new AppViewModel());
 </script
