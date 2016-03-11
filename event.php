@@ -2,6 +2,8 @@
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.min.css">
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.structure.min.css">
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.theme.min.css">
+<link rel="stylesheet" href="portal/css/jquery.qtip.min.css" type="text/css" media="all" />
+
 <?php
 
 define('PUN_ROOT', dirname(__FILE__).'/');
@@ -22,7 +24,7 @@ if ($pun_user['g_read_board'] == '0')
 					<div class="infldset txtarea">
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b>Titre</b></span><br />
-								<input type="text" name="title" id="title" data-bind="value: title, hasError: 'title'" value="" size="60" maxlength="60" tabindex="" /><br />
+								<input type="text" name="title" id="title" title="" data-bind="value: title, hasError: 'title'" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label>
 						</div>
 						<div style="display:inline-block;width:100%;">
@@ -75,6 +77,7 @@ if ($pun_user['g_read_board'] == '0')
 <script src="portal/js/knockout-3.4.0.js"></script>
 <script src="portal/js/knockout.validation.min.js"></script>
 <script type="text/javascript" src="portal/js/kovalidation/fr-FR.js"></script>
+<script src="portal/js/jquery.qtip.min.js"></script>
 
 <script>
 	function AppViewModel() {
@@ -85,7 +88,7 @@ if ($pun_user['g_read_board'] == '0')
 	    self.formatted_title = ko.observable();
 	    self.istopicable = ko.observable(true);
 	    self.ispublic = ko.observable(false);
-	    self.desc = ko.observable("").extend({ required: true });
+	    self.desc = ko.observable("").extend({ required: true }).extend({ required: true });
 	    self.maxusers_list = ko.observableArray([0,1,2,3,4,5,6,7,8,9,10]);
 	    self.maxusers = 0;
 	    self.formatted_title = ko.computed(function() {
@@ -102,7 +105,7 @@ if ($pun_user['g_read_board'] == '0')
 	    self.startDate = ko.observable("").extend({ required: true });;
 	    self.endDate = ko.observable("");
 
-	    self.start = ko.observable("");
+	    self.start = ko.observable("").extend({ required: true });
 		self.start.subscribe(function(newValue) {
 			self.startDate(new moment(newValue, dtDateFormat).unix());
 			var curStartDate = self.startDate();
@@ -111,7 +114,7 @@ if ($pun_user['g_read_board'] == '0')
 				self.end(self.start());
 			}
 		});	    
-	    self.end = ko.observable("");
+	    self.end = ko.observable("").extend({ required: true });
 		self.end.subscribe(function(newValue) {
 			self.endDate(new moment(newValue, dtDateFormat).unix());			
 			var curStartDate = self.startDate();
@@ -121,7 +124,7 @@ if ($pun_user['g_read_board'] == '0')
 			}
 		});
 
-		self.errors = ko.validation.group(self);		
+		self.errors = ko.validation.group([self.title, self.desc, self.start]);		
 		self.save = function(){
 			var postJsonData = {
 				title: self.formatted_title(),
@@ -134,10 +137,9 @@ if ($pun_user['g_read_board'] == '0')
 			};
 			console.log(JSON.stringify(postJsonData));
 			var result = ko.validation.group(self, { deep: true });
-			if (!self.isValid()) { self.errors.showAllMessages();} 			
+			self.errors.showAllMessages(true);		
 		};
 	}
-	//var errors = ko.validation.group([AppViewModel.title, AppViewModel.desc]);
 
 	moment.locale('fr');
 	$.datepicker.setDefaults( $.datepicker.regional[ "fr" ] );
@@ -145,11 +147,26 @@ if ($pun_user['g_read_board'] == '0')
 	$("#end").datepicker();
 	var dtDateFormat = "DD/mm/YYYY";
 
-	ko.validation.init();
+	ko.validation.init({
+		messagesOnModified: true,
+		decorateInputElement: true,
+		insertMessages: false
+	});
 	ko.validation.locale('fr-FR');
-	//ko.applyBindings(new AppViewModel());
-	ko.applyBindingsWithValidation(new AppViewModel());
-
+	ko.validation.init();
+	ko.applyBindings(new AppViewModel());
+    $(":input").qtip({
+		position: {
+			my: 'center left',
+			at: 'center right'
+		},
+		style: {
+	        classes: 'qtip-dark qtip-tipped',
+	        tip: {
+	            corner: 'left center'
+	        }	        
+	    }
+    });		
 </script
 <?php
 
