@@ -6,6 +6,8 @@ header('Content-type: application/json');
 
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 $returnValue;
+print_r($_GET);
+print_r(isset($pun_user['is_guest']) ? 'is_guest : N' : 'is_guest : O');
 
 if ($pun_user['is_guest']){
 	exit;
@@ -26,12 +28,20 @@ switch ($action)
 	case 'events':
 		getEvents();
 		break;
-		
-	case 'addEvent';
+	
+	case 'getEvent';
+		if ($_GET['id'] != null){
+			$id = $_GET['id'];		
+			getEvent($id);
+		}
+		break;
+
+	case 'saveEvent';
 		$isTopicAble = false;
 		$max_users = 0;
 		$start = 0;
 		$end = 0;
+
 		if (isset($_GET['title']) && isset($_GET['message'])){
 			if ($_GET['isTopicAble'] != null && ($_GET['isTopicAble'] == false || $_GET['isTopicAble'] == true))
 				$isTopicAble = $_GET['isTopicAble'];
@@ -48,7 +58,13 @@ switch ($action)
 			if ($_GET['ispublic'] != null && (is_numeric($_GET['ispublic'])))
 				$ispublic = $_GET['ispublic'];
 
-			addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users, $start, $end, $ispublic);			
+			if(isset($_GET['id']) && $_GET['id'] != null && $_GET['id'] != ""){
+				print_r('updateEvent');
+				updateEvent($_GET['id'], $_GET['title'], $_GET['message'], $max_users, $start, $end, $ispublic);			
+
+			}else{
+				addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users, $start, $end, $ispublic);
+			}		
 		}
 		break;
 		
@@ -97,15 +113,30 @@ function getEvents()
 	global $returnValue, $db;
 	$array_events = [];
 	
-	$result = $db->query('SELECT '.$db->prefix.'events.id, title, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT '.$db->prefix.'id, title, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id') or error('Unable to fetch events list', __FILE__, __LINE__, $db->error());
 	while($cur_event = $db->fetch_assoc($result))
 	{
 		array_push($array_events, $cur_event);
 	}
 
+	print_r($array_events);
 	$returnValue = $array_events;
 }
 
+
+function getEvent($id)
+{	
+	global $returnValue, $db;
+	$array_events = [];
+	
+	$result = $db->query('SELECT '.$db->prefix.'id, title, event_desc, max_users, topic_id, start, end, is_public, topic_id FROM '.$db->prefix.'events WHERE id = \''.$db->escape($id).'\'') or error('Unable to fetch event', __FILE__, __LINE__, $db->error());
+	while($cur_event = $db->fetch_assoc($result))
+	{
+		array_push($array_events, $cur_event);
+	}
+
+	$returnValue = $array_events[0];
+}
 
 function addEvent($title, $message, $isTopicAble, $max_users, $start, $end, $is_public){
 	
@@ -124,6 +155,16 @@ function addEvent($title, $message, $isTopicAble, $max_users, $start, $end, $is_
 	}
 	
 	$returnValue = buildMessage(0, "l'événement à été crée");
+}
+
+function updateEvent($id, $title, $message, $max_users, $start, $end, $is_public){
+	global $returnValue, $db, $pun_user;
+	$now = time();
+	
+	$query = 'UPDATE '.$db->prefix.'events set title = \''.$db->escape($title).'\', event_desc = \''.$db->escape($message).'\', max_users = \''.$db->escape($max_users).'\', start = '.$db->escape($start).', end = '.$db->escape($end).', is_public = '.$db->escape($is_public).')';
+	$db->query($query) or error('Unable to update event', __FILE__, __LINE__, $db->error()); 
+
+	$returnValue = buildMessage(0, "l'événement à été mis à jour");
 }
 
 function addEventTopic($subject, $message){

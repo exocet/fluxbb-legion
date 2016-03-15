@@ -9,57 +9,65 @@
 define('PUN_ROOT', dirname(__FILE__).'/');
 require PUN_ROOT.'include/common.php';
 require PUN_ROOT.'header.php';
+require PUN_ROOT.'lang/'.$pun_user['language'].'/event.php';
 
 if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
-
 ?>
+
 <div id="postform" class="blockform">
 	<h2><span><?php echo $action ?></span></h2>
 	<div class="box">
 		<?php echo $form."\n" ?>
+			<!-- ko if: validated -->
+			<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
+					<p data-bind="text: error"></p>
+			</div>
+			<!-- /ko -->
 			<div class="inform">
 				<fieldset>
-					<legend><?php echo $lang_common['Write message legend'] ?></legend>
+					<legend><?php echo $lang_event['Create message legend'] ?></legend>
 					<div class="infldset txtarea">
 						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b>Titre</b></span><br />
-								<input type="text" name="title" id="title" title="" data-bind="value: title, hasError: 'title'" value="" size="60" maxlength="60" tabindex="" /><br />
+							<label class="conl required"><span><b><?php echo $lang_event['title'] ?></b></span><br />
+								<input type="text" name="title" id="title" title="" data-bind="value: title" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label>
 						</div>
 						<div style="display:inline-block;width:100%;">
-							<label class="conl required" style="width: 25%;"><span><b>Inclure la date dans le titre</b></span><br />
+							<label class="conl required" style="width: 30%;"><span><b><?php echo $lang_event['useStartDate'] ?></b></span><br />
 								<input type="checkbox" id="useStartDate" data-bind="checked: useStartDate" name="useStartDate" value="" tabindex="" /><br />
 							</label>
-							<label class="conl required" style="width: 60%;"><span><b>Titre formaté</b></span><br />
+							<label class="conl required" style="width: 60%;"><span><b><?php echo $lang_event['formatted_title'] ?></b></span><br />
 								<input type="text" name="formatted_title" disabled="disabled" id="formatted_title" data-bind="value: formatted_title()" style="border: none;background: inherit;" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label><br />
 						</div>
 						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b>Date de démarrage</b></span><br />
+							<label class="conl required"><span><b><?php echo $lang_event['startDate'] ?></b></span><br />
 								<input type="text" id="start" name="start" data-bind="value: start" value="" size="25" maxlength="25" tabindex="" /><br />
 							</label>
-							<label class="conl required"><span><b>Date de fin</b></span><br />
+							<label class="conl required"><span><b><?php echo $lang_event['endDate'] ?></b></span><br />
 								<input type="text" id="end" name="end" data-bind="value: end" value="" size="25" maxlength="25" tabindex="" /><br />
 							</label>
 						</div>
 						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b>Nombre de places</b></span><br />
-								<select id="maxusers" name="maxusers" data-bind="options: maxusers_list, value: maxusers"></select> 
+							<label class="conl required"><span><b><?php echo $lang_event['maxusers'] ?></b></span><br />
+								<select id="maxusers" name="maxusers" data-bind="options: maxusers_list, optionsText: 'value', optionsValue: 'id', value: maxusers"></select> 
 							</label>
-							<label class="conl required"><span><b>Créer un sujet associé</b></span><br />
-								<input type="checkbox" id="istopicable" data-bind="checked: istopicable" name="istopicable" value="" tabindex="" /><br />
+							<label class="conl required"><span><b><?php echo $lang_event['istopicable'] ?></b></span><br />
+								<input type="checkbox" id="istopicable" data-bind="checked: istopicable, disable: hasId" name="istopicable" value="" tabindex="" /><br />
 							</label>
-							<label class="conl required"><span><b>Evénement visible pour les invités ?</b></span><br />
+							<label class="conl required"><span><b><?php echo $lang_event['ispublic'] ?></b></span><br />
 								<input type="checkbox" id="ispublic" data-bind="checked: ispublic" name="ispublic" value="" tabindex="" /><br />
 							</label>							
 						</div>
-						<label class="conl required"><span><b>Description</b></span><br />
+						<label class="conl required"><span><b><?php echo $lang_event['desc'] ?></b></span><br />
 							<textarea name="desc" id="desc" data-bind="value: desc" rows="20" cols="95" tabindex=""></textarea><br />
 						</label>
 					</div>
 				</fieldset>	
-				<input type="button" data-bind='click: save' id="addEvent" value="Add Event"/>
+				<p class="buttons">
+					<input type="button" data-bind='click: save' id="saveEvent" value="<?php echo $lang_event['saveevent'] ?>"/>
+				</p>
 			</div>
 	</div>
 </div>
@@ -67,6 +75,7 @@ if ($pun_user['g_read_board'] == '0')
 	.validationMessage {
 		color: red;
 		margin-left: 20px;
+		align: center;
 	}
 </style>
 <script src="portal/js/jquery-2.2.1.min.js"></script>
@@ -80,32 +89,54 @@ if ($pun_user['g_read_board'] == '0')
 <script src="portal/js/jquery.qtip.min.js"></script>
 
 <script>
+	var id;
+	//Conversion des variables php en variables js
+	<?php 
+		echo "var langArray = ".json_encode($lang_event).";\n";
+		echo "var kovalidation_language = '".$lang_event['kovalidationlang']."';\n";
+		if (isset($_GET['id'])){
+			$id = $_GET['id'];
+			echo "id = '".$id."';\n";
+		}
+	?>
+
 	function AppViewModel() {
 		var self = this;
 
-	    self.title = ko.observable().extend({ required: true });
+		self.id = ko.observable("");
+	    self.title = ko.observable().extend({ requiredCustom: langArray['title'] });
 	    self.useStartDate = ko.observable(true);
 	    self.formatted_title = ko.observable();
 	    self.istopicable = ko.observable(true);
 	    self.ispublic = ko.observable(false);
-	    self.desc = ko.observable("").extend({ required: true }).extend({ required: true });
-	    self.maxusers_list = ko.observableArray([0,1,2,3,4,5,6,7,8,9,10]);
-	    self.maxusers = 0;
+	    self.desc = ko.observable("").extend({ requiredCustom: langArray['desc'] });
+	    self.maxusers_list = ko.observableArray([
+	    	{id:0, value:0},
+	    	{id:1, value:1},
+	    	{id:2, value:2},
+	    	{id:3, value:3},
+	    	{id:4, value:4},
+	    	{id:5, value:5},
+	    	{id:6, value:6},
+	    	{id:7, value:7}]);
+	    self.maxusers = ko.observable(0);
 	    self.formatted_title = ko.computed(function() {
 	    	var title = self.title();
 			if(title != '' && title != undefined){
 				var eventStartDate = "";
-				if(self.start() != "" && self.useStartDate() == true)
-					eventStartDate = ' du ' + moment(self.start(), dtDateFormat).format("dddd D MMMM");
+				var eventStartMoment = moment(self.start(), dtDateFormat).format("dddd D MMMM");
+				if(self.start() != "" && self.useStartDate() == true && title.indexOf(eventStartMoment) < 0)
+					eventStartDate = ' du ' + eventStartMoment;
 
 				return title + eventStartDate;
 			}
 			return "";
 	    }, self);
-	    self.startDate = ko.observable("").extend({ required: true });;
+	    self.startDate = ko.observable("");
 	    self.endDate = ko.observable("");
+		self.validated = ko.observable(false);
 
-	    self.start = ko.observable("").extend({ required: true });
+	    self.start = ko.observable("").extend({ requiredCustom: langArray['start'] });
 		self.start.subscribe(function(newValue) {
 			self.startDate(new moment(newValue, dtDateFormat).unix());
 			var curStartDate = self.startDate();
@@ -114,7 +145,7 @@ if ($pun_user['g_read_board'] == '0')
 				self.end(self.start());
 			}
 		});	    
-	    self.end = ko.observable("").extend({ required: true });
+	    self.end = ko.observable("").extend({ requiredCustom: langArray['end'] });
 		self.end.subscribe(function(newValue) {
 			self.endDate(new moment(newValue, dtDateFormat).unix());			
 			var curStartDate = self.startDate();
@@ -124,20 +155,53 @@ if ($pun_user['g_read_board'] == '0')
 			}
 		});
 
+		self.hasId = ko.computed(function(){
+			if (self.id != undefined && self.id != "")
+				return true;
+
+			return false;
+		})
+
+		self.load = function(){
+			if(id != undefined){
+				$.get( "json_gateway.php", { id: id, action: "getEvent" } ).done(function( data ) {
+					console.log( "Data Loaded: " + JSON.stringify(data) );
+					//Do mapping
+					self.id = data.id;
+					self.title(data.title);
+					self.startDate(data.start);
+					self.endDate(data.end);
+					self.start(new moment.unix(data.start).format(dtDateFormat));
+					self.end(new moment.unix(data.end).format(dtDateFormat));
+					self.desc(data.event_desc);
+					self.ispublic(data.is_public  != undefined ? true : false);
+					self.istopicable(data.istopicable != undefined ? true : false);
+					self.maxusers(data.max_users);
+					self.istopicable(data.topic_id != undefined ? true : false);					
+				});
+			}
+		};
+
 		self.errors = ko.validation.group([self.title, self.desc, self.start]);		
 		self.save = function(){
 			var postJsonData = {
+				action: 'saveEvent',
+				id: self.id,
 				title: self.formatted_title(),
 				start: self.startDate(),
 				end: self.endDate(),
 				desc: self.desc(),
 				ispublic: self.ispublic(),
 				istopicable: self.istopicable(),
-				maxusers: self.maxusers
+				maxusers: self.maxusers()
 			};
 			console.log(JSON.stringify(postJsonData));
+			$.get( "json_gateway.php", postJsonData).done(function( data ) {
+				console.log(data);
+			});
 			var result = ko.validation.group(self, { deep: true });
-			self.errors.showAllMessages(true);		
+			self.errors.showAllMessages(true);
+			self.validated(true);		
 		};
 	}
 
@@ -145,17 +209,27 @@ if ($pun_user['g_read_board'] == '0')
 	$.datepicker.setDefaults( $.datepicker.regional[ "fr" ] );
 	$("#start").datepicker();	
 	$("#end").datepicker();
-	var dtDateFormat = "DD/mm/YYYY";
+	var dtDateFormat = "DD/MM/YYYY";
 
 	ko.validation.init({
 		messagesOnModified: true,
 		decorateInputElement: true,
 		insertMessages: false
 	});
-	ko.validation.locale('fr-FR');
+	ko.validation.rules['requiredCustom'] = {
+	    validator: function(val, otherVal) {
+	        return (val != "" && val != undefined);
+	    },
+	    message: 'The field {0} is required.'
+	};
+	ko.validation.registerExtenders();
+	ko.validation.locale(kovalidation_language);
 	ko.validation.init();
-	ko.applyBindings(new AppViewModel());
-    $(":input").qtip({
+	var eventViewModel = new AppViewModel();
+	ko.applyBindings(eventViewModel);
+	eventViewModel.load();
+
+    /*$(":input").qtip({
 		position: {
 			my: 'center left',
 			at: 'center right'
@@ -166,8 +240,8 @@ if ($pun_user['g_read_board'] == '0')
 	            corner: 'left center'
 	        }	        
 	    }
-    });		
-</script
+    });	*/	
+</script>
 <?php
 
 

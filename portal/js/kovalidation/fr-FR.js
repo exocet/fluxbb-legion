@@ -34,6 +34,7 @@
 		phoneUS: 'Veuillez saisir un numéro de téléphone valide.',
 		equal: 'Les valeurs doivent être égales.',
 		notEqual: 'Veuillez saisir une autre valeur.',
-		unique: 'Veuillez vérifier que la valeur est unique.'
+		unique: 'Veuillez vérifier que la valeur est unique.',
+		requiredCustom: 'Le champ {0} est obligatoire.'
 	});
 }));
