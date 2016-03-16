@@ -167,7 +167,7 @@ if ($pun_user['g_read_board'] == '0')
 				$.get( "json_gateway.php", { id: id, action: "getEvent" } ).done(function( data ) {
 					console.log( "Data Loaded: " + JSON.stringify(data) );
 					//Do mapping
-					self.id = data.id;
+					self.id(data.id);
 					self.title(data.title);
 					self.startDate(data.start);
 					self.endDate(data.end);
@@ -186,7 +186,7 @@ if ($pun_user['g_read_board'] == '0')
 		self.save = function(){
 			var postJsonData = {
 				action: 'saveEvent',
-				id: self.id,
+				id: self.id(),
 				title: self.formatted_title(),
 				start: self.startDate(),
 				end: self.endDate(),
@@ -195,7 +195,7 @@ if ($pun_user['g_read_board'] == '0')
 				istopicable: self.istopicable(),
 				maxusers: self.maxusers()
 			};
-			console.log(JSON.stringify(postJsonData));
+			console.log( "Data Sent : " + JSON.stringify(postJsonData));
 			$.get( "json_gateway.php", postJsonData).done(function( data ) {
 				console.log(data);
 			});

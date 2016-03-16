@@ -6,8 +6,11 @@ header('Content-type: application/json');
 
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 $returnValue;
-print_r($_GET);
-print_r(isset($pun_user['is_guest']) ? 'is_guest : N' : 'is_guest : O');
+
+if (isset($_GET['debug']) && $_GET['debug'] == true){
+	print_r($_GET);
+	print_r(isset($pun_user['is_guest']) ? 'is_guest : N' : 'is_guest : O');
+}
 
 if ($pun_user['is_guest']){
 	exit;
@@ -37,14 +40,15 @@ switch ($action)
 		break;
 
 	case 'saveEvent';
-		$isTopicAble = false;
+		$is_topicable = false;
+		$is_public = false;
 		$max_users = 0;
 		$start = 0;
 		$end = 0;
 
 		if (isset($_GET['title']) && isset($_GET['message'])){
-			if ($_GET['isTopicAble'] != null && ($_GET['isTopicAble'] == false || $_GET['isTopicAble'] == true))
-				$isTopicAble = $_GET['isTopicAble'];
+			if ($_GET['istopicable'] != null && ($_GET['istopicable'] == false || $_GET['istopicable'] == true))
+				$is_topicable = $_GET['istopicable'];
 
 			if ($_GET['maxusers'] != null && (is_numeric($_GET['maxusers'])))
 				$max_users = $_GET['maxusers'];
@@ -59,11 +63,14 @@ switch ($action)
 				$ispublic = $_GET['ispublic'];
 
 			if(isset($_GET['id']) && $_GET['id'] != null && $_GET['id'] != ""){
-				print_r('updateEvent');
-				updateEvent($_GET['id'], $_GET['title'], $_GET['message'], $max_users, $start, $end, $ispublic);			
+				$maxusers = $_GET['maxusers'];
+				$start = $_GET['start'];
+				$end = $_GET['end'];
+				$is_public = $_GET['ispublic'] == false ? 0 : 1;
+				updateEvent($_GET['id'], $_GET['title'], $_GET['message'], $max_users, $start, $end, $is_public);			
 
 			}else{
-				addEvent($_GET['title'], $_GET['message'], $isTopicAble, $max_users, $start, $end, $ispublic);
+				addEvent($_GET['title'], $_GET['message'], $is_TopicAble, $max_users, $start, $end, $is_public);
 			}		
 		}
 		break;
@@ -161,7 +168,7 @@ function updateEvent($id, $title, $message, $max_users, $start, $end, $is_public
 	global $returnValue, $db, $pun_user;
 	$now = time();
 	
-	$query = 'UPDATE '.$db->prefix.'events set title = \''.$db->escape($title).'\', event_desc = \''.$db->escape($message).'\', max_users = \''.$db->escape($max_users).'\', start = '.$db->escape($start).', end = '.$db->escape($end).', is_public = '.$db->escape($is_public).')';
+	$query = 'UPDATE '.$db->prefix.'events set title = \''.$db->escape($title).'\', event_desc = \''.$db->escape($message).'\', max_users = \''.$db->escape($max_users).'\', start = '.$db->escape($start).', end = '.$db->escape($end).', is_public = '.$db->escape($is_public).' where id = '.$db->escape($id);
 	$db->query($query) or error('Unable to update event', __FILE__, __LINE__, $db->error()); 
 
 	$returnValue = buildMessage(0, "l'événement à été mis à jour");
