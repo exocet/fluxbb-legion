@@ -14,16 +14,18 @@ require PUN_ROOT.'lang/'.$pun_user['language'].'/event.php';
 if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
 ?>
-
+			<!-- ko if: saveResponse -->
+			<div class="informationMessage">
+				<span id="saveResponse" data-bind="text: saveResponse" title="saveResponse"></span>
+			</div>
+			<!-- /ko -->
+			<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
+				<p data-bind="text: error"></p>
+			</div>
 <div id="postform" class="blockform">
 	<h2><span><?php echo $action ?></span></h2>
 	<div class="box">
 		<?php echo $form."\n" ?>
-			<!-- ko if: validated -->
-			<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
-					<p data-bind="text: error"></p>
-			</div>
-			<!-- /ko -->
 			<div class="inform">
 				<fieldset>
 					<legend><?php echo $lang_event['Create message legend'] ?></legend>
@@ -72,11 +74,23 @@ if ($pun_user['g_read_board'] == '0')
 	</div>
 </div>
 <style>
-	.validationMessage {
+	div.validationMessage {
 		color: red;
-		margin-left: 20px;
-		align: center;
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+		width: 300px;
+		position: relative;
 	}
+	div.informationMessage {
+		color: green;
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+		width: 300px;
+		position: relative;
+		height: : 100px;
+	}	
 </style>
 <script src="portal/js/jquery-2.2.1.min.js"></script>
 <script src="portal/js/moment.js"></script>
@@ -134,8 +148,6 @@ if ($pun_user['g_read_board'] == '0')
 	    }, self);
 	    self.startDate = ko.observable("");
 	    self.endDate = ko.observable("");
-		self.validated = ko.observable(false);
-
 	    self.start = ko.observable("").extend({ requiredCustom: langArray['start'] });
 		self.start.subscribe(function(newValue) {
 			self.startDate(new moment(newValue, dtDateFormat).unix());
@@ -154,13 +166,21 @@ if ($pun_user['g_read_board'] == '0')
 				self.end(self.start());
 			}
 		});
-
 		self.hasId = ko.computed(function(){
 			if (self.id != undefined && self.id != "")
 				return true;
 
 			return false;
 		})
+		self.saveResponse = ko.observable("");
+		self.errors = ko.validation.group([self.title, self.desc, self.start]);
+		self.validated = ko.computed(function(){
+			if (self.errors().length > 0){
+				return false;
+			}else{
+				return true;
+			}
+		});
 
 		self.load = function(){
 			if(id != undefined){
@@ -182,26 +202,29 @@ if ($pun_user['g_read_board'] == '0')
 			}
 		};
 
-		self.errors = ko.validation.group([self.title, self.desc, self.start]);		
 		self.save = function(){
-			var postJsonData = {
-				action: 'saveEvent',
-				id: self.id(),
-				title: self.formatted_title(),
-				start: self.startDate(),
-				end: self.endDate(),
-				desc: self.desc(),
-				ispublic: self.ispublic(),
-				istopicable: self.istopicable(),
-				maxusers: self.maxusers()
-			};
-			console.log( "Data Sent : " + JSON.stringify(postJsonData));
-			$.get( "json_gateway.php", postJsonData).done(function( data ) {
-				console.log(data);
-			});
-			var result = ko.validation.group(self, { deep: true });
+			self.saveResponse("");
 			self.errors.showAllMessages(true);
-			self.validated(true);		
+			//self.errors = ko.validation.group([self.title, self.desc, self.start]);
+			console.log("errors : " + self.errors().length);
+			if(self.errors().length === 0){
+				var postJsonData = {
+					action: 'saveEvent',
+					id: self.id(),
+					title: self.formatted_title(),
+					start: self.startDate(),
+					end: self.endDate(),
+					desc: self.desc(),
+					ispublic: self.ispublic(),
+					istopicable: self.istopicable(),
+					maxusers: self.maxusers()
+				};
+				console.log( "Data Sent : " + JSON.stringify(postJsonData));
+				$.get( "json_gateway.php", postJsonData, function( data ) {
+					self.saveResponse(data.message);
+					console.log(self.saveResponse());
+				});
+			}
 		};
 	}
 

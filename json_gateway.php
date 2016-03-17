@@ -46,7 +46,7 @@ switch ($action)
 		$start = 0;
 		$end = 0;
 
-		if (isset($_GET['title']) && isset($_GET['message'])){
+		if (isset($_GET['title']) && isset($_GET['desc'])){
 			if ($_GET['istopicable'] != null && ($_GET['istopicable'] == false || $_GET['istopicable'] == true))
 				$is_topicable = $_GET['istopicable'];
 
@@ -63,12 +63,11 @@ switch ($action)
 				$ispublic = $_GET['ispublic'];
 
 			if(isset($_GET['id']) && $_GET['id'] != null && $_GET['id'] != ""){
-				$maxusers = $_GET['maxusers'];
+				$max_users = $_GET['maxusers'];
 				$start = $_GET['start'];
 				$end = $_GET['end'];
 				$is_public = $_GET['ispublic'] == false ? 0 : 1;
-				updateEvent($_GET['id'], $_GET['title'], $_GET['message'], $max_users, $start, $end, $is_public);			
-
+				updateEvent($_GET['id'], $_GET['title'], $_GET['desc'], $max_users, $start, $end, $is_public);
 			}else{
 				addEvent($_GET['title'], $_GET['message'], $is_TopicAble, $max_users, $start, $end, $is_public);
 			}		
