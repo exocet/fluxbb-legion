@@ -18,6 +18,7 @@ require PUN_ROOT.'portal_header.php';
 	moment.locale('fr');
 	var calendarData = [];
 	$.get("json_gateway.php?action=events", function(data){
+		console.log(data);
 		data.forEach(function(value, index, array){
 			calendarData.push({
 				title: value.title,

@@ -14,14 +14,9 @@ require PUN_ROOT.'lang/'.$pun_user['language'].'/event.php';
 if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
 ?>
-			<!-- ko if: saveResponse -->
-			<div class="informationMessage">
-				<span id="saveResponse" data-bind="text: saveResponse" title="saveResponse"></span>
-			</div>
-			<!-- /ko -->
-			<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
-				<p data-bind="text: error"></p>
-			</div>
+<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
+	<p data-bind="text: error"></p>
+</div>
 <div id="postform" class="blockform">
 	<h2><span><?php echo $action ?></span></h2>
 	<div class="box">
@@ -39,8 +34,8 @@ if ($pun_user['g_read_board'] == '0')
 							<label class="conl required" style="width: 30%;"><span><b><?php echo $lang_event['useStartDate'] ?></b></span><br />
 								<input type="checkbox" id="useStartDate" data-bind="checked: useStartDate" name="useStartDate" value="" tabindex="" /><br />
 							</label>
-							<label class="conl required" style="width: 60%;"><span><b><?php echo $lang_event['formatted_title'] ?></b></span><br />
-								<input type="text" name="formatted_title" disabled="disabled" id="formatted_title" data-bind="value: formatted_title()" style="border: none;background: inherit;" value="" size="60" maxlength="60" tabindex="" /><br />
+							<label class="conl required" style="width: 60%;"><span><b><?php echo $lang_event['title_formatted'] ?></b></span><br />
+								<input type="text" name="title_formatted" disabled="disabled" id="title_formatted" data-bind="value: title_formatted()" style="border: none;background: inherit;" value="" size="60" maxlength="60" tabindex="" /><br />
 							</label><br />
 						</div>
 						<div style="display:inline-block;width:100%;">
@@ -101,6 +96,7 @@ if ($pun_user['g_read_board'] == '0')
 <script src="portal/js/knockout.validation.min.js"></script>
 <script type="text/javascript" src="portal/js/kovalidation/fr-FR.js"></script>
 <script src="portal/js/jquery.qtip.min.js"></script>
+<script src="portal/js/jquery.noty.packaged.min.js"></script>
 
 <script>
 	var id;
@@ -120,7 +116,7 @@ if ($pun_user['g_read_board'] == '0')
 		self.id = ko.observable("");
 	    self.title = ko.observable().extend({ requiredCustom: langArray['title'] });
 	    self.useStartDate = ko.observable(true);
-	    self.formatted_title = ko.observable();
+	    self.title_formatted = ko.observable();
 	    self.istopicable = ko.observable(true);
 	    self.ispublic = ko.observable(false);
 	    self.desc = ko.observable("").extend({ requiredCustom: langArray['desc'] });
@@ -134,7 +130,7 @@ if ($pun_user['g_read_board'] == '0')
 	    	{id:6, value:6},
 	    	{id:7, value:7}]);
 	    self.maxusers = ko.observable(0);
-	    self.formatted_title = ko.computed(function() {
+	    self.title_formatted = ko.computed(function() {
 	    	var title = self.title();
 			if(title != '' && title != undefined){
 				var eventStartDate = "";
@@ -203,15 +199,14 @@ if ($pun_user['g_read_board'] == '0')
 		};
 
 		self.save = function(){
-			self.saveResponse("");
 			self.errors.showAllMessages(true);
-			//self.errors = ko.validation.group([self.title, self.desc, self.start]);
 			console.log("errors : " + self.errors().length);
 			if(self.errors().length === 0){
 				var postJsonData = {
 					action: 'saveEvent',
 					id: self.id(),
-					title: self.formatted_title(),
+					title: self.title(),
+					title_formatted: self.title_formatted(),
 					start: self.startDate(),
 					end: self.endDate(),
 					desc: self.desc(),
@@ -221,8 +216,16 @@ if ($pun_user['g_read_board'] == '0')
 				};
 				console.log( "Data Sent : " + JSON.stringify(postJsonData));
 				$.get( "json_gateway.php", postJsonData, function( data ) {
-					self.saveResponse(data.message);
-					console.log(self.saveResponse());
+					self.saveResponse(langArray[data.message]);
+					noty({text: langArray[data.message], layout: 'center', timeout: 2000,     
+						animation: {
+					        open: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceInLeft'
+					        close: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceOutLeft'
+					        easing: 'swing',
+					        speed: 500 // opening & closing animation speed
+					    	}
+						});					
+					console.log(langArray[self.saveResponse()]);
 				});
 			}
 		};
