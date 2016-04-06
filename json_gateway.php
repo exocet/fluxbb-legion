@@ -63,14 +63,13 @@ switch ($action)
 			if ($_GET['end'] != null && (is_numeric($_GET['end'])))
 				$end = $_GET['end'];
 
-			if ($_GET['ispublic'] != null && (is_numeric($_GET['ispublic'])))
-				$ispublic = $_GET['ispublic'];
+			if ($_GET['ispublic'] != null && ($_GET['ispublic']))
+				$is_public = $_GET['ispublic'] === false ? 0 : 1;
 
 			if(isset($_GET['id']) && $_GET['id'] != null && $_GET['id'] != ""){
 				$max_users = $_GET['maxusers'];
 				$start = $_GET['start'];
 				$end = $_GET['end'];
-				$is_public = $_GET['ispublic'] == false ? 0 : 1;
 				updateEvent($_GET['id'], $_GET['title'], $title_formatted, $_GET['desc'], $max_users, $start, $end, $is_public);
 			}else{
 				addEvent($_GET['title'], $title_formatted, $_GET['message'], $is_TopicAble, $max_users, $start, $end, $is_public);
@@ -162,7 +161,7 @@ function addEvent($title, $title_formatted, $message, $isTopicAble, $max_users, 
 		$db->query($query) or error('Unable to update event', __FILE__, __LINE__, $db->error()); 
 	}
 	
-	$returnValue = buildMessage(0, "l'événement à été crée");
+	$returnValue = buildMessage(0, "EventCreated");
 }
 
 function updateEvent($id, $title, $title_formatted, $message, $max_users, $start, $end, $is_public){

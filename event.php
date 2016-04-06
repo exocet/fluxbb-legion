@@ -2,7 +2,6 @@
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.min.css">
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.structure.min.css">
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.theme.min.css">
-<link rel="stylesheet" href="portal/css/jquery.qtip.min.css" type="text/css" media="all" />
 
 <?php
 
@@ -14,9 +13,6 @@ require PUN_ROOT.'lang/'.$pun_user['language'].'/event.php';
 if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
 ?>
-<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
-	<p data-bind="text: error"></p>
-</div>
 <div id="postform" class="blockform">
 	<h2><span><?php echo $action ?></span></h2>
 	<div class="box">
@@ -24,6 +20,9 @@ if ($pun_user['g_read_board'] == '0')
 			<div class="inform">
 				<fieldset>
 					<legend><?php echo $lang_event['Create message legend'] ?></legend>
+					<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
+						<p data-bind="text: error"></p>
+					</div>
 					<div class="infldset txtarea">
 						<div style="display:inline-block;width:100%;">
 							<label class="conl required"><span><b><?php echo $lang_event['title'] ?></b></span><br />
@@ -39,10 +38,10 @@ if ($pun_user['g_read_board'] == '0')
 							</label><br />
 						</div>
 						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b><?php echo $lang_event['startDate'] ?></b></span><br />
+							<label class="conl required"><span><b><?php echo $lang_event['start'] ?></b></span><br />
 								<input type="text" id="start" name="start" data-bind="value: start" value="" size="25" maxlength="25" tabindex="" /><br />
 							</label>
-							<label class="conl required"><span><b><?php echo $lang_event['endDate'] ?></b></span><br />
+							<label class="conl required"><span><b><?php echo $lang_event['end'] ?></b></span><br />
 								<input type="text" id="end" name="end" data-bind="value: end" value="" size="25" maxlength="25" tabindex="" /><br />
 							</label>
 						</div>
@@ -95,7 +94,6 @@ if ($pun_user['g_read_board'] == '0')
 <script src="portal/js/knockout-3.4.0.js"></script>
 <script src="portal/js/knockout.validation.min.js"></script>
 <script type="text/javascript" src="portal/js/kovalidation/fr-FR.js"></script>
-<script src="portal/js/jquery.qtip.min.js"></script>
 <script src="portal/js/jquery.noty.packaged.min.js"></script>
 
 <script>
@@ -168,7 +166,6 @@ if ($pun_user['g_read_board'] == '0')
 
 			return false;
 		})
-		self.saveResponse = ko.observable("");
 		self.errors = ko.validation.group([self.title, self.desc, self.start]);
 		self.validated = ko.computed(function(){
 			if (self.errors().length > 0){
@@ -216,8 +213,7 @@ if ($pun_user['g_read_board'] == '0')
 				};
 				console.log( "Data Sent : " + JSON.stringify(postJsonData));
 				$.get( "json_gateway.php", postJsonData, function( data ) {
-					self.saveResponse(langArray[data.message]);
-					noty({text: langArray[data.message], layout: 'center', timeout: 2000,     
+					noty({text: langArray[data.message.toString()], layout: 'center', timeout: 2000,     
 						animation: {
 					        open: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceInLeft'
 					        close: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceOutLeft'
@@ -225,8 +221,16 @@ if ($pun_user['g_read_board'] == '0')
 					        speed: 500 // opening & closing animation speed
 					    	}
 						});					
-					console.log(langArray[self.saveResponse()]);
 				});
+			}else{
+				noty({text: langArray['hasErrors'], layout: 'center', timeout: 2000,     
+					animation: {
+				        open: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceInLeft'
+				        close: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceOutLeft'
+				        easing: 'swing',
+				        speed: 500 // opening & closing animation speed
+				    	}
+					});					
 			}
 		};
 	}
@@ -238,7 +242,7 @@ if ($pun_user['g_read_board'] == '0')
 	var dtDateFormat = "DD/MM/YYYY";
 
 	ko.validation.init({
-		messagesOnModified: true,
+		messagesOnModified: false,
 		decorateInputElement: true,
 		insertMessages: false
 	});
@@ -254,19 +258,6 @@ if ($pun_user['g_read_board'] == '0')
 	var eventViewModel = new AppViewModel();
 	ko.applyBindings(eventViewModel);
 	eventViewModel.load();
-
-    /*$(":input").qtip({
-		position: {
-			my: 'center left',
-			at: 'center right'
-		},
-		style: {
-	        classes: 'qtip-dark qtip-tipped',
-	        tip: {
-	            corner: 'left center'
-	        }	        
-	    }
-    });	*/	
 </script>
 <?php
 
