@@ -1,7 +1,7 @@
 
-<link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.min.css">
-<link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.structure.min.css">
-<link rel="stylesheet" type="text/css" href="portal/css/jquery-ui.theme.min.css">
+<link rel="stylesheet" type="text/css" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.min.css">
+<link rel="stylesheet" type="text/css" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.structure.min.css">
+<link rel="stylesheet" type="text/css" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.theme.min.css">
 
 <?php
 
@@ -57,7 +57,7 @@ if ($pun_user['g_read_board'] == '0')
 							</label>							
 						</div>
 						<label class="conl required"><span><b><?php echo $lang_event['desc'] ?></b></span><br />
-							<textarea name="desc" id="desc" data-bind="value: desc" rows="20" cols="95" tabindex=""></textarea><br />
+							<textarea name="desc" id="desc" data-bind="value: event_desc" rows="20" cols="95" tabindex=""></textarea><br />
 						</label>
 					</div>
 				</fieldset>	
@@ -117,7 +117,7 @@ if ($pun_user['g_read_board'] == '0')
 	    self.title_formatted = ko.observable();
 	    self.istopicable = ko.observable(true);
 	    self.ispublic = ko.observable(false);
-	    self.desc = ko.observable("").extend({ requiredCustom: langArray['desc'] });
+	    self.event_desc = ko.observable("").extend({ requiredCustom: langArray['desc'] });
 	    self.maxusers_list = ko.observableArray([
 	    	{id:0, value:0},
 	    	{id:1, value:1},
@@ -166,7 +166,7 @@ if ($pun_user['g_read_board'] == '0')
 
 			return false;
 		})
-		self.errors = ko.validation.group([self.title, self.desc, self.start]);
+		self.errors = ko.validation.group([self.title, self.event_desc, self.start]);
 		self.validated = ko.computed(function(){
 			if (self.errors().length > 0){
 				return false;
@@ -186,7 +186,7 @@ if ($pun_user['g_read_board'] == '0')
 					self.endDate(data.end);
 					self.start(new moment.unix(data.start).format(dtDateFormat));
 					self.end(new moment.unix(data.end).format(dtDateFormat));
-					self.desc(data.event_desc);
+					self.event_desc(data.event_desc);
 					self.ispublic(data.is_public  != undefined ? true : false);
 					self.istopicable(data.istopicable != undefined ? true : false);
 					self.maxusers(data.max_users);
@@ -206,7 +206,7 @@ if ($pun_user['g_read_board'] == '0')
 					title_formatted: self.title_formatted(),
 					start: self.startDate(),
 					end: self.endDate(),
-					desc: self.desc(),
+					event_desc: self.event_desc(),
 					ispublic: self.ispublic(),
 					istopicable: self.istopicable(),
 					maxusers: self.maxusers()
