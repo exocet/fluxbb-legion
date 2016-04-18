@@ -2,6 +2,8 @@
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.min.css">
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.structure.min.css">
 <link rel="stylesheet" type="text/css" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.theme.min.css">
+<link rel="stylesheet" href="portal/css/jquery.qtip.min.css" type="text/css" media="all" />
+<link rel="stylesheet" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.theme.min.css" type="text/css" media="all" />
 
 <?php
 
@@ -68,12 +70,12 @@ if ($pun_user['g_read_board'] == '0')
 				</p>
 			</div>
 	</div>
-</div>
-					<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
-						<p data-bind="text: error"></p>
-					</div>
+</div>	
 
 <style>
+	.validationElement {
+		border-color: red;
+	}
 	div.validationMessage {
 		color: red;
 		text-align: center;
@@ -101,7 +103,11 @@ if ($pun_user['g_read_board'] == '0')
 <script src="portal/js/knockout-3.4.0.js"></script>
 <script src="portal/js/knockout.validation.min.js"></script>
 <script type="text/javascript" src="portal/js/kovalidation/fr-FR.js"></script>
-<script src="portal/js/jquery.noty.packaged.min.js"></script>
+<script src="portal/js/noty/jquery.noty.packaged.min.js"></script>
+<script type="text/javascript" src="portal/js/noty/themes/relax.js"></script>
+<script type="text/javascript" src="portal/js/noty/themes/default.js"></script>
+<script src="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.min.js"></script>
+<script src="portal/js/jquery.qtip.min.js"></script>
 
 <script>
 	var id;
@@ -114,7 +120,38 @@ if ($pun_user['g_read_board'] == '0')
 			echo "id = '".$id."';\n";
 		}
 	?>
-
+	function dialogue(content, title) {
+	    $('<div />').qtip({
+	        content: {
+	            text: content,
+	            title: title
+	        },
+	        position: {
+	            my: 'center', at: 'center',
+	            target: $(window)
+	        },
+	        show: {
+	            ready: true,
+	            modal: {
+	                on: true,
+	                blur: false
+	            }
+	        },
+	        hide: false,
+	        style: 'dialogue',
+	        events: {
+	            render: function(event, api) {
+	                $('button', api.elements.content).click(function(e) {
+	                    api.hide(e);
+	                });
+	            },
+	            hide: function(event, api) { api.destroy(); }
+	        },
+	        style: {
+	        	widget: true
+	        }
+	    });
+	}
 	function AppViewModel() {
 		var self = this;
 
@@ -147,7 +184,7 @@ if ($pun_user['g_read_board'] == '0')
 				var eventStartDate = "";
 				var eventStartMoment = moment(self.start(), dtDateFormat).format("dddd D MMMM");
 				if(self.start() != "" && self.useStartDate() == true && title.indexOf(eventStartMoment) < 0)
-					eventStartDate = ' du ' + eventStartMoment;
+					eventStartDate = langArray['titleFormPrefix'] + eventStartMoment;
 
 				return title + eventStartDate;
 			}
@@ -224,39 +261,32 @@ if ($pun_user['g_read_board'] == '0')
 					forum: self.forum()
 				};
 				$.post( "api/events/", postJsonData, function( data ) {
-					/*noty({text: langArray[data.message.toString()], layout: 'center', timeout: 2000,     
-						animation: {
-					        open: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceInLeft'
-					        close: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceOutLeft'
-					        easing: 'swing',
-					        speed: 500 // opening & closing animation speed
-					    	}
-						});*/
-					console.log(data);					
+					var message = $('<p />', { html: langArray[data.message]}),
+					ok = $('<button />', { text: 'Ok', 'class': 'full' });
+
+					dialogue( message.add(ok), langArray['infoModalTitle'] );				
 				});
 			}else{
-				noty({text: langArray['hasErrors'], layout: 'center', timeout: 2000,     
-					animation: {
-				        open: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceInLeft'
-				        close: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceOutLeft'
-				        easing: 'swing',
-				        speed: 500 // opening & closing animation speed
-				    	}
-					});					
+				var message = $('<p />', { html: langArray['errorModalMsg'] + ' :<br/><br/>' + self.errors().join('<br/>') }),
+				ok = $('<button />', { text: 'Ok', 'class': 'full' });
+
+				dialogue( message.add(ok), langArray['errorModalTitle'] );
 			}
 		};
 	}
 
-	moment.locale('fr');
-	$.datepicker.setDefaults( $.datepicker.regional[ "fr" ] );
-	$("#start").datepicker();	
-	$("#end").datepicker();
-	var dtDateFormat = "DD/MM/YYYY";
+	moment.locale(langArray['calendarLang']);
+	$.datepicker.setDefaults( $.datepicker.regional[langArray['calendarLang']]);
+	$("#start").datepicker({dateFormat: langArray['pickerDatePattern']});	
+	$("#end").datepicker({dateFormat: langArray['pickerDatePattern']});
+	var dtDateFormat = langArray['datePattern'];
 
 	ko.validation.init({
 		messagesOnModified: false,
 		decorateInputElement: true,
-		insertMessages: false
+		insertMessages: false,
+		errorElementClass: 'validationElement',
+		errorClass: 'validationElement'
 	});
 	ko.validation.rules['requiredCustom'] = {
 	    validator: function(val, otherVal) {
