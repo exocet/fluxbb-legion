@@ -13,9 +13,10 @@ $lang_event = array(
 'desc'				=>	'Description',
 'kovalidationlang'	=>	'en-US',
 'saveevent'			=>  'Save Event',
-'formatted_title'	=>  'Formatted title',
+'title_formatted'	=>  'Formatted title',
 'Create message legend' =>	'Create a new event',
 'EventUpdated'		=> 'Event updated',
 'EventUpdated'		=> 'Event created',
-'hasErrors'			=> 'The form has errors'
+'hasErrors'			=> 'The form has errors',
+'forum'				=> 'Game type'
 );

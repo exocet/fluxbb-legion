@@ -2,8 +2,8 @@
 	function doGet($params){
 		global $db;
 		$array_events = [];
-		
-		if(isset($params) && !empty($params)){
+
+		if(isset($params['id']) && $params['id'] != null && $params['id'] != ''){
 			$id = $params['id'];
 			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where events.id = '.$db->escape($id).' group by events.id';
 		}else{
@@ -17,6 +17,31 @@
 		}
 
 		return $array_events;
+	}
+
+	function doDelete($params){
+		global $db, $pun_user;
+		$now = time();
+		$user_id = $pun_user['id'];
+
+		if(isset($params['id']) && $params['id'] != null && $params['id'] != ''){		
+			$id = $params['id'];
+
+			$query = 'SELECT id FROM '.$db->prefix.'events where id='.$db->escape($id).' and owner_id = '.$db->escape($user_id);
+			$result = $db->query($query) or apiDbLayerError('Unable to check events owner');
+			$num_rows = $db->num_rows($result);
+			if($num_rows === 1){
+				$query = 'DELETE FROM '.$db->prefix.'events where id='.$db->escape($id);
+				$result = $db->query($query) or apiDbLayerError('Unable to delete event');
+				$query = 'DELETE FROM '.$db->prefix.'events_subscriptions where event_id='.$db->escape($id);
+				$result = $db->query($query) or apiDbLayerError('Unable to delete event subscriptions');			
+			}else{
+				return ['error', 'EventDeletionNotAllowed'];
+			}
+
+			return ['success', 'EventDeleted'];
+		}
+		return ['error', 'EventDeletionNoIdSubmitted'];
 	}
 
 	function doPost($params){
@@ -51,13 +76,11 @@
 		if (isset($params['event_desc']) && $params['event_desc'] != null && ($params['event_desc']))
 			$event_desc = $params['event_desc'];
 		
-		if (isset($params['is_topicable']) && $params['is_topicable'] != null && ($params['is_topicable'] == 'false' || $params['is_topicable'] == 'true'))
+		if (isset($params['is_topicable']) && $params['is_topicable'] != null)
 			$is_topicable = $params['is_topicable'] == 'false' ? false : true;
 		
 		if (isset($params['max_users']) && $params['max_users'] != null && (is_numeric($params['max_users'])))		
 			$max_users = $params['max_users'];
-
-		var_dump($params);
 
 		if(isset($params['id']) && $params['id'] != null && $params['id'] != ''){
 			$id = $params['id'];
@@ -90,7 +113,7 @@
 		$username = $pun_user['username'];
 		$email = $pun_user['email'];
 		$hide_smilies = 0;
-		$fid = 2;
+		$fid = 4;
 		$now = time();
 		
 		// Create the topic

@@ -26,7 +26,7 @@ require PUN_ROOT.'portal_header.php';
 		echo "var user_name = '".$pun_user['username']."';\n";
 		echo "var user_id = '".$pun_user['id']."';\n";
 	?>
-	$.get("json_gateway.php?action=events", function(data){
+	$.get("api/events/", function(data){
 		console.log(data);
 		data.forEach(function(value, index, array){
 			calendarData.push({

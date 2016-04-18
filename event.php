@@ -18,46 +18,48 @@ if ($pun_user['g_read_board'] == '0')
 	<div class="box">
 		<?php echo $form."\n" ?>
 			<div class="inform">
-				<fieldset>
+				<fieldset >				
 					<legend><?php echo $lang_event['Create message legend'] ?></legend>
-					<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
-						<p data-bind="text: error"></p>
-					</div>
 					<div class="infldset txtarea">
-						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b><?php echo $lang_event['title'] ?></b></span><br />
-								<input type="text" name="title" id="title" title="" data-bind="value: title" value="" size="60" maxlength="60" tabindex="" /><br />
+						<div>
+							<label class="conl required" for="title"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['title'] ?></b></span>
+								<input type="text" name="title" id="title" title="" data-bind="value: title" value="" size="70" maxlength="60" tabindex="" />
+							</label>
+							<!--<label class="conl required"><span><b><?php echo $lang_event['useStartDate'] ?></b></span><br />
+								<input type="checkbox" id="useStartDate" data-bind="checked: useStartDate" name="useStartDate" value="" tabindex="" />
+							</label>-->
+						</div>
+						<div>
+							<label class="conl required" for="start"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['start'] ?></b></span>
+								<input type="text" id="start" name="start" data-bind="value: start" value="" size="25" maxlength="25" tabindex="" />
+							</label>
+							<label class="conl required" for="end" style="margin-left:22px;"><span style="display: inline-block;width: 85px;"><b><?php echo $lang_event['end'] ?></b></span>
+								<input type="text" id="end" name="end" data-bind="value: end" value="" size="25" maxlength="25" tabindex="" />
 							</label>
 						</div>
-						<div style="display:inline-block;width:100%;">
-							<label class="conl required" style="width: 30%;"><span><b><?php echo $lang_event['useStartDate'] ?></b></span><br />
-								<input type="checkbox" id="useStartDate" data-bind="checked: useStartDate" name="useStartDate" value="" tabindex="" /><br />
-							</label>
-							<label class="conl required" style="width: 60%;"><span><b><?php echo $lang_event['title_formatted'] ?></b></span><br />
-								<input type="text" name="title_formatted" disabled="disabled" id="title_formatted" data-bind="value: title_formatted()" style="border: none;background: inherit;" value="" size="60" maxlength="60" tabindex="" /><br />
-							</label><br />
-						</div>
-						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b><?php echo $lang_event['start'] ?></b></span><br />
-								<input type="text" id="start" name="start" data-bind="value: start" value="" size="25" maxlength="25" tabindex="" /><br />
-							</label>
-							<label class="conl required"><span><b><?php echo $lang_event['end'] ?></b></span><br />
-								<input type="text" id="end" name="end" data-bind="value: end" value="" size="25" maxlength="25" tabindex="" /><br />
-							</label>
-						</div>
-						<div style="display:inline-block;width:100%;">
-							<label class="conl required"><span><b><?php echo $lang_event['maxusers'] ?></b></span><br />
+						<div>
+							<label class="conl required" style="display:inline-block;margin-right: 400px;"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['maxusers'] ?></b></span>
 								<select id="maxusers" name="maxusers" data-bind="options: maxusers_list, optionsText: 'value', optionsValue: 'id', value: maxusers"></select> 
 							</label>
-							<label class="conl required"><span><b><?php echo $lang_event['istopicable'] ?></b></span><br />
-								<input type="checkbox" id="istopicable" data-bind="checked: istopicable, disable: hasId" name="istopicable" value="" tabindex="" /><br />
-							</label>
-							<label class="conl required"><span><b><?php echo $lang_event['ispublic'] ?></b></span><br />
-								<input type="checkbox" id="ispublic" data-bind="checked: ispublic" name="ispublic" value="" tabindex="" /><br />
-							</label>							
+							<!--<label class="conl required"><span><b><?php echo $lang_event['ispublic'] ?></b></span>
+								<input type="checkbox" id="ispublic" data-bind="checked: ispublic" name="ispublic" value="" tabindex="" />
+							</label>-->							
 						</div>
-						<label class="conl required"><span><b><?php echo $lang_event['desc'] ?></b></span><br />
-							<textarea name="desc" id="desc" data-bind="value: event_desc" rows="20" cols="95" tabindex=""></textarea><br />
+						<!--<div>
+							<label class="conl required" style="display:block;margin-right: 400px;"><span style="display: inline-block;width: 145px;"><b><?php echo $lang_event['istopicable'] ?></b></span>
+								<input type="checkbox" id="istopicable" data-bind="checked: istopicable, disable: hasId" name="istopicable" value="" tabindex="" />
+							</label>
+						</div>-->
+						<div>
+							<label class="conl required"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['forum'] ?></b></span>
+								<select id="forum" name="forum" data-bind="options: forum_list, optionsText: 'value', optionsValue: 'id', value: forum"></select> 
+							</label>						
+							<label class="conl required" for="title_formatted" ><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['title_formatted'] ?></b></span>
+								<input type="text" name="title_formatted" disabled="disabled" id="title_formatted" data-bind="value: title_formatted()" style="background: inherit;border: hidden;" value="" size="70" maxlength="60" tabindex="" />
+							</label>
+						</div>
+						<label class="conl required"><span style="display: inline-block;width: 150px;margin-bottom: 10px;"><b><?php echo $lang_event['desc'] ?></b></span>
+							<textarea name="desc" id="desc" data-bind="value: event_desc" rows="20" cols="95" tabindex=""></textarea>
 						</label>
 					</div>
 				</fieldset>	
@@ -67,6 +69,10 @@ if ($pun_user['g_read_board'] == '0')
 			</div>
 	</div>
 </div>
+					<div data-bind="foreach: { data: errors, as: 'error' }" class="validationMessage">
+						<p data-bind="text: error"></p>
+					</div>
+
 <style>
 	div.validationMessage {
 		color: red;
@@ -75,6 +81,7 @@ if ($pun_user['g_read_board'] == '0')
 		margin-right: auto;
 		width: 300px;
 		position: relative;
+		align: right;
 	}
 	div.informationMessage {
 		color: green;
@@ -127,10 +134,16 @@ if ($pun_user['g_read_board'] == '0')
 	    	{id:5, value:5},
 	    	{id:6, value:6},
 	    	{id:7, value:7}]);
+	    self.forum_list = ko.observableArray([
+	    	{id:0, value:''},	    	
+	    	{id:4, value:'Evénements - Jeu de Rôles'},
+	    	{id:5, value:'Evénements - Jeu de Figurines'}	    	
+	    ]);
 	    self.maxusers = ko.observable(0);
+	    self.forum = ko.observable(4);
 	    self.title_formatted = ko.computed(function() {
 	    	var title = self.title();
-			if(title != '' && title != undefined){
+			if(title != '' && title != undefined && self.forum() != 0){
 				var eventStartDate = "";
 				var eventStartMoment = moment(self.start(), dtDateFormat).format("dddd D MMMM");
 				if(self.start() != "" && self.useStartDate() == true && title.indexOf(eventStartMoment) < 0)
@@ -162,9 +175,9 @@ if ($pun_user['g_read_board'] == '0')
 		});
 		self.hasId = ko.computed(function(){
 			if (self.id != undefined && self.id != "")
-				return true;
+				return false;
 
-			return false;
+			return true;
 		})
 		self.errors = ko.validation.group([self.title, self.event_desc, self.start]);
 		self.validated = ko.computed(function(){
@@ -197,30 +210,29 @@ if ($pun_user['g_read_board'] == '0')
 
 		self.save = function(){
 			self.errors.showAllMessages(true);
-			console.log("errors : " + self.errors().length);
 			if(self.errors().length === 0){
 				var postJsonData = {
-					action: 'saveEvent',
 					id: self.id(),
 					title: self.title(),
 					title_formatted: self.title_formatted(),
 					start: self.startDate(),
 					end: self.endDate(),
 					event_desc: self.event_desc(),
-					ispublic: self.ispublic(),
-					istopicable: self.istopicable(),
-					maxusers: self.maxusers()
+					is_public: self.ispublic(),
+					is_topicable: self.istopicable(),
+					max_users: self.maxusers(),
+					forum: self.forum()
 				};
-				console.log( "Data Sent : " + JSON.stringify(postJsonData));
-				$.get( "json_gateway.php", postJsonData, function( data ) {
-					noty({text: langArray[data.message.toString()], layout: 'center', timeout: 2000,     
+				$.post( "api/events/", postJsonData, function( data ) {
+					/*noty({text: langArray[data.message.toString()], layout: 'center', timeout: 2000,     
 						animation: {
 					        open: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceInLeft'
 					        close: {height: 'toggle'}, // or Animate.css class names like: 'animated bounceOutLeft'
 					        easing: 'swing',
 					        speed: 500 // opening & closing animation speed
 					    	}
-						});					
+						});*/
+					console.log(data);					
 				});
 			}else{
 				noty({text: langArray['hasErrors'], layout: 'center', timeout: 2000,     

@@ -3,15 +3,17 @@ define('PUN_ROOT', '../');
 require PUN_ROOT.'include/common.php';
 header('Content-type: application/json');
 
-
 $method = $_SERVER['REQUEST_METHOD'];
-$url = preg_replace('{/$}', '', $_SERVER['REQUEST_URI']);
+/*$url = preg_replace('{/$}', '', $_SERVER['REQUEST_URI']);
 $url_path = parse_url($url, PHP_URL_PATH);
 $query_string = parse_url($url, PHP_URL_QUERY);
 $url_path_explode = explode('/', $url_path);
-$url_end = end($url_path_explode);
+$url_end = end($url_path_explode);*/
 
-if (!file_exists(dirname(__FILE__).'/api.'.$url_end.'.php')){
+$context = $_GET['context'];
+
+
+if (!file_exists(dirname(__FILE__).'/api.'.$context.'.php')){
 	http_response_code(404);
 	exit(0);
 }
@@ -22,7 +24,7 @@ if (!isset($method) || $method == ''){
 	exit(0);
 }
 
-include('api.'.$url_end.'.php');
+include('api.'.$context.'.php');
 
 handleMethod($method);
 
@@ -30,23 +32,27 @@ handleMethod($method);
 function handleMethod($method){
 	switch ($method) {
 		case 'GET':
-			if(function_exists('doGet'))
+			if(function_exists('doGet')){
 				$returnValue = doGet($_GET);
+			}
 			break;
 		
 		case 'POST':
-			if(function_exists('doPost'))
+			if(function_exists('doPost')){
 				$returnMessage = doPost($_POST);
+			}
 			break;
 
 		case 'PUT':
-			if(function_exists('doPut'))
+			if(function_exists('doPut')){
 				$returnValue = doPut();
+			}
 			break;
 
 		case 'DELETE':
-			if(function_exists('doDelete'))
-				$returnValue = doDelete();
+			if(function_exists('doDelete')){
+				$returnValue = doDelete($_GET);
+			}
 			break;
 
 		default:
@@ -78,7 +84,7 @@ function apiDbLayerError($message){
 function buildReturnMessage($array){
 	$result = $array[0];
 	$message = $array[1];
-	$message = json_encode(array('error' => $result, 'message' => $message), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	$message = json_encode(array('result' => $result, 'message' => $message), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 	
 	return $message;
 }

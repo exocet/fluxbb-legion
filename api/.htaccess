@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteBase /FluxBB-legion/
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^events/$ api/api.php?context=events [NC,QSA,L]
+RewriteRule ^events/([0-9]+)$ api/api.php?id=$1&context=events [NC,QSA,L]
+</IfModule>
