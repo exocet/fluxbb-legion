@@ -4,17 +4,38 @@ define('PUN_PORTAL', 1);
 require PUN_ROOT.'include/common.php';
 require PUN_ROOT.'portal_header.php';
 ?>
-<link rel="stylesheet" href="portal/css/fullcalendar.min.css" type="text/css" media="all" />
-<!--<link rel="stylesheet" href="portal/css/fullcalendar.print.css" type="text/css" media="all" />-->
+<link rel="stylesheet" href="portal/css/fullcalendar/fullcalendar.min.css" type="text/css" media="all" />
 <link rel="stylesheet" href="portal/css/jquery.qtip.min.css" type="text/css" media="all" />
 <link rel="stylesheet" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.min.css" type="text/css" media="all" />
 <link rel="stylesheet" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.structure.min.css" type="text/css" media="all" />
 <link rel="stylesheet" href="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.theme.min.css" type="text/css" media="all" />
 
+<style>
+	.jumpTo {
+		width: 16px;
+		min-width: 16px;
+		height: 16px;
+		min-height: 16px;
+		display: inline-block;
+		cursor: pointer;
+		margin-right: 20px;
+	}
+	.jumpTo.forum {
+		background: transparent url(portal/images/diagona/16/191.png) center center no-repeat;  		
+	}
+	.jumpTo.delete {
+		background: transparent url(portal/images/diagona/16/101.png) center center no-repeat;  		
+	}
+	.jumpTo.cancel {
+		background: transparent url(portal/images/diagona/16/150.png) center center no-repeat;  		
+	}
+</style>
+
 <script src="portal/js/jquery-2.2.1.min.js"></script>
 <script src="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.min.js"></script>
 <script src="portal/js/moment.js"></script>
-<script src="portal/js/fullcalendar.min.js"></script>
+<script src="portal/js/fullcalendar/fullcalendar.min.js"></script>
+<script src="portal/js/fullcalendar/lang/fr.js"></script>
 <script src="portal/js/jquery.qtip.min.js"></script>
 
 <div id='calendar'></div>
@@ -46,6 +67,7 @@ require PUN_ROOT.'portal_header.php';
 	$('#calendar').fullCalendar({
 		events: calendarData,
 		theme: true,
+		lang: 'fr',
 		header: {
 			left: 'prev,next today',
 			center: 'title',
@@ -57,10 +79,10 @@ require PUN_ROOT.'portal_header.php';
 			if(event.max_users && event.max_users > 0)
 				eventFullDesc = eventFullDesc + "</br></br>Nombre d'inscris : " + event.registered_users + "/" + event.max_users;
 			if(event.topic_id)
-				eventFullDesc = eventFullDesc + '</br></br><a target="_blank" href=viewtopic.php?id=' + event.topic_id + '>Suivre dans le forum</a>';
+				eventFullDesc = eventFullDesc + '</br></br><a class="jumpTo forum" target="_blank" href=viewtopic.php?id=' + event.topic_id + ' title="Suivre dans le forum"></a>';
 			if(event.owner_id == user_id){
-				eventFullDesc = eventFullDesc + '</br></br><a target="_blank" href=viewtopic.php?id=' + event.topic_id + '>Supprimer l\'événement</a>';
-				eventFullDesc = eventFullDesc + '</br></br><a target="_blank" href=viewtopic.php?id=' + event.topic_id + '>Annuler l\'événement</a>';
+				eventFullDesc = eventFullDesc + '<a class="jumpTo delete" target="_blank" href=viewtopic.php?id=' + event.topic_id + ' title="Supprimer l\'événement"></a>';
+				eventFullDesc = eventFullDesc + '<a class="jumpTo cancel" target="_blank" href=viewtopic.php?id=' + event.topic_id + ' title="Annuler l\'événement"></a>';
 			}
 	        element.qtip({
 				content: {

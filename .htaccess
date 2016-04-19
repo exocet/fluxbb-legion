@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /fluxbb-legion/
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule events(.*)$ api/api.php [QSA,NC,L]
+RewriteRule users(.*)$ api/api.php [NC,L]
+RewriteRule topics(.*)$ api/api.php [NC,L]
+</IfModule>

@@ -6,10 +6,42 @@
 		if(isset($params['id']) && $params['id'] != null && $params['id'] != ''){
 			$id = $params['id'];
 			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where events.id = '.$db->escape($id).' group by events.id';
+		}else if(isset($params['mod']) && $params['mod'] != null && $params['mod'] != ''){
+			switch ($params['mod']) {
+				case 'today':
+					$start = new DateTime();
+					$start = $start->getTimestamp();
+					$end = $start;
+
+					break;
+				case 'thisweek':
+					$start = new DateTime();
+					$start->modify('last monday');
+					$end = clone $start;
+					$end->modify('next sunday');
+					
+					$end = $end->getTimestamp();
+					$start = $start->getTimestamp();
+
+					break;
+				
+				case 'thismonth':
+					$start = new DateTime();
+					$start->modify('first day of this month');
+					$end = clone $start;
+					$end->modify('last day of this month');
+					
+					$end = $end->getTimestamp();
+					$start = $start->getTimestamp();
+
+					break;
+				default:					
+					break;
+			}			
+			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where start >= '.$start.' and end <= '.$end.' group by events.id';
 		}else{
 			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id';
 		}
-
 		$result = $db->query($query) or apiDbLayerError('Unable to fetch events list');
 		while($cur_event = $db->fetch_assoc($result))
 		{

@@ -3,6 +3,6 @@ RewriteEngine on
 RewriteBase /FluxBB-legion/
 #RewriteCond %{REQUEST_FILENAME} !-f
 #RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^events/$ api/api.php?context=events [NC,QSA,L]
-RewriteRule ^events/([0-9]+)$ api/api.php?id=$1&context=events [NC,QSA,L]
+RewriteRule (.*)/([a-z]*) api/api.php?context=$1&mod=$2 [NC,QSA]
+RewriteRule (.*)/([0-9]*) api/api.php?context=$1&id=$2 [NC,QSA]
 </IfModule>

@@ -12,7 +12,6 @@ $url_end = end($url_path_explode);*/
 
 $context = $_GET['context'];
 
-
 if (!file_exists(dirname(__FILE__).'/api.'.$context.'.php')){
 	http_response_code(404);
 	exit(0);

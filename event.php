@@ -95,19 +95,19 @@ if ($pun_user['g_read_board'] == '0')
 		height: : 100px;
 	}	
 </style>
-<script src="portal/js/jquery-2.2.1.min.js"></script>
-<script src="portal/js/moment.js"></script>
-<script src="portal/js/fr.js"></script>
-<script src="portal/js/jquery-ui.min.js"></script>
-<script src="portal/js/datepicker-fr.js"></script>
-<script src="portal/js/knockout-3.4.0.js"></script>
-<script src="portal/js/knockout.validation.min.js"></script>
+<!--<script type="text/javascript" src="portal/js/datepicker-fr.js"></script>-->
+<script type="text/javascript" src="portal/js/jquery-2.2.1.min.js"></script>
+<script type="text/javascript" src="portal/js/moment.js"></script>
+<script type="text/javascript" src="portal/js/fr.js"></script>
+<script type="text/javascript" src="portal/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="portal/js/knockout-3.4.0.js"></script>
+<script type="text/javascript" src="portal/js/knockout.validation.min.js"></script>
 <script type="text/javascript" src="portal/js/kovalidation/fr-FR.js"></script>
-<script src="portal/js/noty/jquery.noty.packaged.min.js"></script>
+<script type="text/javascript" src="portal/js/noty/jquery.noty.packaged.min.js"></script>
 <script type="text/javascript" src="portal/js/noty/themes/relax.js"></script>
 <script type="text/javascript" src="portal/js/noty/themes/default.js"></script>
-<script src="portal/css/jquery-ui-1.12.0-rc.1.custom/jquery-ui.min.js"></script>
-<script src="portal/js/jquery.qtip.min.js"></script>
+<script type="text/javascript" src="portal/js/jquery-ui-i18n.js"></script>
+<script type="text/javascript" src="portal/js/jquery.qtip.min.js"></script>
 
 <script>
 	var id;
