@@ -27,9 +27,6 @@ if ($pun_user['g_read_board'] == '0')
 							<label class="conl required" for="title"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['title'] ?></b></span>
 								<input type="text" name="title" id="title" title="" data-bind="value: title" value="" size="70" maxlength="60" tabindex="" />
 							</label>
-							<!--<label class="conl required"><span><b><?php echo $lang_event['useStartDate'] ?></b></span><br />
-								<input type="checkbox" id="useStartDate" data-bind="checked: useStartDate" name="useStartDate" value="" tabindex="" />
-							</label>-->
 						</div>
 						<div>
 							<label class="conl required" for="start"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['start'] ?></b></span>
@@ -43,19 +40,14 @@ if ($pun_user['g_read_board'] == '0')
 							<label class="conl required" style="display:inline-block;margin-right: 400px;"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['maxusers'] ?></b></span>
 								<select id="maxusers" name="maxusers" data-bind="options: maxusers_list, optionsText: 'value', optionsValue: 'id', value: maxusers"></select> 
 							</label>
-							<!--<label class="conl required"><span><b><?php echo $lang_event['ispublic'] ?></b></span>
-								<input type="checkbox" id="ispublic" data-bind="checked: ispublic" name="ispublic" value="" tabindex="" />
-							</label>-->							
 						</div>
-						<!--<div>
-							<label class="conl required" style="display:block;margin-right: 400px;"><span style="display: inline-block;width: 145px;"><b><?php echo $lang_event['istopicable'] ?></b></span>
-								<input type="checkbox" id="istopicable" data-bind="checked: istopicable, disable: hasId" name="istopicable" value="" tabindex="" />
-							</label>
-						</div>-->
 						<div>
 							<label class="conl required"><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['forum'] ?></b></span>
 								<select id="forum" name="forum" data-bind="options: forum_list, optionsText: 'value', optionsValue: 'id', value: forum"></select> 
 							</label>						
+							<label class="conl required"><span style="display: inline-block;width: 150px;margin-left: 100px;" title=<?php echo '"'.$lang_event['newtopic_explain'].'"' ?>><b><?php echo $lang_event['newtopic'] ?></b></span>
+								<input type="checkbox" id="newtopic" data-bind="checked: newtopic, disable: hasId" name="newtopic" value="" tabindex="" />
+							</label>
 							<label class="conl required" for="title_formatted" ><span style="display: inline-block;width: 150px;"><b><?php echo $lang_event['title_formatted'] ?></b></span>
 								<input type="text" name="title_formatted" disabled="disabled" id="title_formatted" data-bind="value: title_formatted()" style="background: inherit;border: hidden;" value="" size="70" maxlength="60" tabindex="" />
 							</label>
@@ -111,14 +103,28 @@ if ($pun_user['g_read_board'] == '0')
 
 <script>
 	var id;
-	//Conversion des variables php en variables js
 	<?php 
+		//Conversion des variables php en variables js
 		echo "var langArray = ".json_encode($lang_event).";\n";
 		echo "var kovalidation_language = '".$lang_event['kovalidationlang']."';\n";
 		if (isset($_GET['id'])){
 			$id = $_GET['id'];
 			echo "id = '".$id."';\n";
 		}
+		//Récupération des forums associés aux nouveaux événements
+		echo "var o_topic_events_rpg = '".$pun_config['o_topic_events_rpg']."';\n";
+		echo "var o_topic_events_ttp = '".$pun_config['o_topic_events_ttp']."';\n";
+		echo "var o_topic_events_ttp = '".$pun_config['o_topic_events_other']."';\n";
+
+		$events_forums = [];
+		$query = "SELECT id, forum_name as value from ".$db->prefix."forums where id in (".$pun_config['o_topic_events_rpg'].", ".$pun_config['o_topic_events_ttp'].", ".$pun_config['o_topic_events_other'].") order by id";
+		$result = $db->query($query) or $db->error('Unable to fetch forums list');
+		while($event_forum = $db->fetch_assoc($result))
+		{
+			array_push($events_forums, $event_forum);
+		}
+		echo "var events_forums = ".json_encode($events_forums).";\n";
+		//echo "events_forums.reverse();";
 	?>
 	function dialogue(content, title) {
 	    $('<div />').qtip({
@@ -159,8 +165,7 @@ if ($pun_user['g_read_board'] == '0')
 	    self.title = ko.observable().extend({ requiredCustom: langArray['title'] });
 	    self.useStartDate = ko.observable(true);
 	    self.title_formatted = ko.observable();
-	    self.istopicable = ko.observable(true);
-	    self.ispublic = ko.observable(false);
+	    self.newtopic = ko.observable(false);
 	    self.event_desc = ko.observable("").extend({ requiredCustom: langArray['desc'] });
 	    self.maxusers_list = ko.observableArray([
 	    	{id:0, value:0},
@@ -171,22 +176,20 @@ if ($pun_user['g_read_board'] == '0')
 	    	{id:5, value:5},
 	    	{id:6, value:6},
 	    	{id:7, value:7}]);
-	    self.forum_list = ko.observableArray([
-	    	{id:0, value:''},	    	
-	    	{id:4, value:'Evénements - Jeu de Rôles'},
-	    	{id:5, value:'Evénements - Jeu de Figurines'}	    	
-	    ]);
+	    self.forum_list = ko.observableArray(events_forums);
 	    self.maxusers = ko.observable(0);
 	    self.forum = ko.observable(4);
 	    self.title_formatted = ko.computed(function() {
 	    	var title = self.title();
 			if(title != '' && title != undefined && self.forum() != 0){
-				var eventStartDate = "";
 				var eventStartMoment = moment(self.start(), dtDateFormat).format("dddd D MMMM");
-				if(self.start() != "" && self.useStartDate() == true && title.indexOf(eventStartMoment) < 0)
-					eventStartDate = langArray['titleFormPrefix'] + eventStartMoment;
-
-				return title + eventStartDate;
+				if(self.start() != "" && self.useStartDate() == true && title.indexOf(eventStartMoment) < 0){
+					if(self.newtopic() == true){
+						return 'Partie de ' + title + langArray['titleFormPrefix'] + eventStartMoment;						
+					}else{
+						return 'Partie' + langArray['titleFormPrefix'] + eventStartMoment;												
+					}
+				}
 			}
 			return "";
 	    }, self);
@@ -197,11 +200,12 @@ if ($pun_user['g_read_board'] == '0')
 			self.startDate(new moment(newValue, dtDateFormat).unix());
 			var curStartDate = self.startDate();
 			var curEndDate = self.endDate();
+			//self.forum_list.splice(0,1,{id:'0', value:'Parties de jeux de rôle du ' + self.start()});
 			if(curStartDate != undefined && curStartDate > curEndDate){
 				self.end(self.start());
 			}
 		});	    
-	    self.end = ko.observable("").extend({ requiredCustom: langArray['end'] });
+	    self.end = ko.observable("");//.extend({ requiredCustom: langArray['end'] });
 		self.end.subscribe(function(newValue) {
 			self.endDate(new moment(newValue, dtDateFormat).unix());			
 			var curStartDate = self.startDate();
@@ -237,8 +241,7 @@ if ($pun_user['g_read_board'] == '0')
 					self.start(new moment.unix(data.start).format(dtDateFormat));
 					self.end(new moment.unix(data.end).format(dtDateFormat));
 					self.event_desc(data.event_desc);
-					self.ispublic(data.is_public  != undefined ? true : false);
-					self.istopicable(data.istopicable != undefined ? true : false);
+					self.newtopic(data.newtopic != undefined ? true : false);
 					self.maxusers(data.max_users);
 					self.istopicable(data.topic_id != undefined ? true : false);					
 				});
@@ -255,8 +258,7 @@ if ($pun_user['g_read_board'] == '0')
 					start: self.startDate(),
 					end: self.endDate(),
 					event_desc: self.event_desc(),
-					is_public: self.ispublic(),
-					is_topicable: self.istopicable(),
+					newtopic: self.newtopic(),
 					max_users: self.maxusers(),
 					forum: self.forum()
 				};

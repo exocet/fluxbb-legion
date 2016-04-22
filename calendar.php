@@ -77,7 +77,7 @@ require PUN_ROOT.'portal_header.php';
 	    eventRender: function(event, element) {
 	    	var eventFullDesc = event.event_desc;
 			if(event.max_users && event.max_users > 0)
-				eventFullDesc = eventFullDesc + "</br></br>Nombre d'inscris : " + event.registered_users + "/" + event.max_users;
+				eventFullDesc = eventFullDesc + "</br></br>Nombre d'inscrits : " + event.registered_users + "/" + event.max_users;
 			if(event.topic_id)
 				eventFullDesc = eventFullDesc + '</br></br><a class="jumpTo forum" target="_blank" href=viewtopic.php?id=' + event.topic_id + ' title="Suivre dans le forum"></a>';
 			if(event.owner_id == user_id){

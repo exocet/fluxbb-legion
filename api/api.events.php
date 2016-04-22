@@ -5,7 +5,7 @@
 
 		if(isset($params['id']) && $params['id'] != null && $params['id'] != ''){
 			$id = $params['id'];
-			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where events.id = '.$db->escape($id).' group by events.id';
+			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_multi_game FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where events.id = '.$db->escape($id).' group by events.id';
 		}else if(isset($params['mod']) && $params['mod'] != null && $params['mod'] != ''){
 			switch ($params['mod']) {
 				case 'today':
@@ -38,9 +38,9 @@
 				default:					
 					break;
 			}			
-			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where start >= '.$start.' and end <= '.$end.' group by events.id';
+			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_multi_game FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id where start >= '.$start.' and end <= '.$end.' group by events.id';
 		}else{
-			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_public FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id';
+			$query = 'SELECT '.$db->prefix.'events.id, title, owner_id, title_formatted, event_desc, max_users, topic_id, start, end, count(user_id) as registered_users, is_multi_game FROM '.$db->prefix.'events left outer join '.$db->prefix.'events_subscriptions on event_id = '.$db->prefix.'events.id group by events.id';
 		}
 		$result = $db->query($query) or apiDbLayerError('Unable to fetch events list');
 		while($cur_event = $db->fetch_assoc($result))
@@ -82,12 +82,14 @@
 		$user_id = $pun_user['id'];
 
 		//defaults
-		$is_topicable = false;
-		$is_public = false;
+		$newtopic = false;
+		$is_multi_game = 0;
 		$max_users = 0;
 		$start = 0;
 		$end = 0;
-		$title_formatted = "";		
+		$title_formatted = "";
+		$is_multi_game = 0;
+		$forum = 0;	
 
 		//validation
 		if (isset($params['title']) && $params['title'] != null)
@@ -102,41 +104,56 @@
 		if (isset($params['end']) && $params['end'] != null && (is_numeric($params['end'])))
 			$end = $params['end'];
 
-		if (isset($params['is_public']) && $params['is_public'] != null && ($params['is_public']))
-			$is_public = $params['is_public'] === false ? 0 : 1;
-
 		if (isset($params['event_desc']) && $params['event_desc'] != null && ($params['event_desc']))
 			$event_desc = $params['event_desc'];
 		
-		if (isset($params['is_topicable']) && $params['is_topicable'] != null)
-			$is_topicable = $params['is_topicable'] == 'false' ? false : true;
-		
+		if (isset($params['newtopic']) && $params['newtopic'] != null)
+			$newtopic = $params['newtopic'] == 'false' ? false : true;
+
 		if (isset($params['max_users']) && $params['max_users'] != null && (is_numeric($params['max_users'])))		
 			$max_users = $params['max_users'];
 
+		if (isset($params['forum']) && $params['forum'] != null && (is_numeric($params['forum'])))		
+			$forum = $params['forum'];
+
 		if(isset($params['id']) && $params['id'] != null && $params['id'] != ''){
 			$id = $params['id'];
-			$query = 'UPDATE '.$db->prefix.'events set title = \''.$db->escape($title).'\', title_formatted = \''.$db->escape($title_formatted).'\', event_desc = \''.$db->escape($event_desc).'\', max_users = \''.$db->escape($max_users).'\', start = '.$db->escape($start).', end = '.$db->escape($end).', is_public = '.$db->escape($is_public).' where id = '.$db->escape($id);
+			$query = 'UPDATE '.$db->prefix.'events set title = \''.$db->escape($title).'\', title_formatted = \''.$db->escape($title_formatted).'\', event_desc = \''.$db->escape($event_desc).'\', max_users = \''.$db->escape($max_users).'\', start = '.$db->escape($start).', end = '.$db->escape($end).', is_multi_game = '.$db->escape($is_multi_game).' where id = '.$db->escape($id);
 			$errorMessage = "Unable to update event";
 			$db->query($query) or apiDbLayerError($errorMessage); 
 		}else{
-			$query = 'INSERT INTO '.$db->prefix.'events (owner_id, title,  title_formatted, event_desc, max_users, start, end, topic_id, is_public) VALUES ('.$user_id.', \''.$db->escape($title).'\', \''.$db->escape($title_formatted).'\',\''.$db->escape($event_desc).'\', \''.$db->escape($max_users).'\', '.$db->escape($start).', '.$db->escape($end).', NULL, '.$db->escape($is_public).')';					
-			$errorMessage = "Unable to create event";
-			$db->query($query) or apiDbLayerError($errorMessage); 
+			if($newtopic == false){
+				/* On cherche s'il existe un topic commun pour cette date
+				L'attribut is_multi_game indique que l'événement est associé à un topic pouvant être associé à d'autres événements. Permet par exemple d'avoir un topic pour les parties du vendredi soir.
+				*/
+				$query = 'SELECT topic_id FROM '.$db->prefix.'events WHERE start='.$db->escape($start).' AND is_multi_game = 1';
+				$result = $db->query($query) or apiDbLayerError('Unable to fetch multi_game topic');
+				$assoc_topic_id = null;
+				while($cur_topic = $db->fetch_assoc($result))
+				{
+					$assoc_topic_id = $cur_topic['topic_id'];
+				}
+				$is_multi_game  = ($assoc_topic_id == null ? 1 : 0);
+			}
+			$assoc_topic_id_sql = ($assoc_topic_id == null ? 'NULL' : $assoc_topic_id);
+
+			$query = 'INSERT INTO '.$db->prefix.'events (owner_id, title,  title_formatted, event_desc, max_users, start, end, topic_id, is_multi_game) VALUES ('.$user_id.', \''.$db->escape($title).'\', \''.$db->escape($title_formatted).'\',\''.$db->escape($event_desc).'\', \''.$db->escape($max_users).'\', '.$db->escape($start).', '.$db->escape($end).', '.$assoc_topic_id_sql.', '.$db->escape($is_multi_game).')';					
+			$db->query($query) or apiDbLayerError("Unable to create event"); 
 			$new_eid = $db->insert_id();
-			if ($is_topicable == true){
-				$new_tid = addEventTopic($title_formatted, $event_desc);
+			if ($newtopic == true || $assoc_topic_id == null || $assoc_topic_id == ''){
+				//On doit créer un nouveau topic réservé à cet événement.
+				$new_tid = addEventTopic($title_formatted, $event_desc, $forum);
 				$query = 'UPDATE '.$db->prefix.'events set topic_id='.$new_tid.' where id='.$new_eid;
 				$db->query($query) or apiDbLayerError('Unable to associate event with topic'); 
 			}
-		}
+	}
 		
 		return ['success', 'EventCreated'];		
 	}
 
 
 //Utils function specific to events
-	function addEventTopic($subject, $event_desc){
+	function addEventTopic($subject, $event_desc, $forum){
 
 		require PUN_ROOT.'include/search_idx.php';
 
@@ -145,7 +162,7 @@
 		$username = $pun_user['username'];
 		$email = $pun_user['email'];
 		$hide_smilies = 0;
-		$fid = 4;
+		$fid = $forum;
 		$now = time();
 		
 		// Create the topic
